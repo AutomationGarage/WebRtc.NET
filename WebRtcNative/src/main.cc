@@ -36,7 +36,6 @@
 #pragma comment(lib,"netapi32.lib")
 
 // internal
-#pragma comment(lib,"liblept168.lib")
 #pragma comment(lib,"turbojpeg-static.lib")
 #pragma comment(lib,"webrtc-all.lib")
 

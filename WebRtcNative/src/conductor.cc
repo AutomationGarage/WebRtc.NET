@@ -20,8 +20,6 @@
 #include "webrtc/base/stringencode.h"
 #include "webrtc/base/thread.h"
 
-//#define L_LITTLE_ENDIAN
-//#include "leptonica/allheaders.h"
 #include "turbojpeg/turbojpeg.h"
 #include "atlsafe.h"
 
