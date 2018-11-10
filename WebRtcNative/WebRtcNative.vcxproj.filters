@@ -4,9 +4,6 @@
     <ClCompile Include="src\conductor.cc" />
     <ClCompile Include="src\defaults.cc" />
     <ClCompile Include="src\main.cc" />
-    <ClCompile Include="src\internals\yuvframegenerator.cc">
-      <Filter>internal</Filter>
-    </ClCompile>
     <ClCompile Include="src\internals\thread_win.c">
       <Filter>internal</Filter>
     </ClCompile>

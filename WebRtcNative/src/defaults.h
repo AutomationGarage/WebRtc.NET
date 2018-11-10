@@ -1,4 +1,3 @@
-
 #ifndef WEBRTC_NET_DEFAULTS_H_
 #define WEBRTC_NET_DEFAULTS_H_
 #pragma once
@@ -6,18 +5,13 @@
 #include "internals.h"
 
 #include "webrtc/media/base/videocapturer.h"
-#include "webrtc/media/base/yuvframegenerator.h"
 #include "webrtc/api/mediastreaminterface.h"
-#include "webrtc/modules/desktop_capture/desktop_capturer.h"
 
 namespace Native
 {
 	class Conductor;
 
 	class YuvFramesCapturer2 : public cricket::VideoCapturer
-#if DESKTOP_CAPTURE
-		, webrtc::DesktopCapturer::Callback
-#endif
 	{
 	public:
 		YuvFramesCapturer2(Conductor & c);
@@ -27,39 +21,19 @@ namespace Native
 		virtual cricket::CaptureState Start(const cricket::VideoFormat& capture_format);
 		virtual void Stop();
 		virtual bool IsRunning();
-		virtual bool IsScreencast() const
-		{
-			return false;
-		}
+		virtual bool IsScreencast() const { return false; }
 
-		void PushFrame(bool testScreen);
-
-#if DESKTOP_CAPTURE
-		void CaptureFrame();
-		virtual void OnCaptureResult(webrtc::DesktopCapturer::Result result, std::unique_ptr<webrtc::DesktopFrame> frame);
-		std::unique_ptr<webrtc::DesktopFrame> desktop_frame;
-		webrtc::DesktopCapturer::SourceList desktop_screens;
-#endif
+		void PushFrame();
 		rtc::scoped_refptr<webrtc::I420Buffer> video_buffer;
 		uint32_t frame_data_size_;
 
 	protected:
-
 		virtual bool GetPreferredFourccs(std::vector<uint32_t>* fourccs);
 
 	private:
-
 		Conductor * con;
-		cricket::YuvFrameGenerator* frame_generator_;
 		webrtc::VideoFrame * video_frame;
-
-		int64_t barcode_reference_timestamp_millis_;
-		int32_t barcode_interval_;
 		bool run;
-
-#if DESKTOP_CAPTURE
-		std::unique_ptr<webrtc::DesktopCapturer> desktop_capturer;
-#endif
 	};
 
 	class VideoRenderer : public rtc::VideoSinkInterface<webrtc::VideoFrame>
@@ -100,10 +74,10 @@ namespace Native
 		}
 
 		virtual void OnData(const void* audio_data,
-							int bits_per_sample,
-							int sample_rate,
-							size_t number_of_channels,
-							size_t number_of_frames) override;
+			int bits_per_sample,
+			int sample_rate,
+			size_t number_of_channels,
+			size_t number_of_frames) override;
 
 	protected:
 

@@ -245,46 +245,6 @@ namespace WebRtc.NET.Demo
                             g.CopyFromScreen(Cursor.Position, new Point(), new Size(screenWidth, screenHeight));
                         }
 
-                        if (checkBoxInternalScreen.Checked)
-                        {
-                            #region -- native webrtc desktop capture --
-
-                            //set internals.h #define DESKTOP_CAPTURE 1
-
-                            foreach (var s in webSocketServer.Streams)
-                            {
-                                // if no editing is needed & size match
-                                //s.Value.WebRtc.CaptureFrameAndPush();
-                                //return;
-
-                                //if (false)
-                                {
-                                    int x = -1, y = -1;
-                                    var rgbaPtr = s.Value.WebRtc.CaptureFrameBGRX(ref x, ref y);
-                                    if (rgbaPtr != IntPtr.Zero)
-                                    {
-                                        Bitmap captureImg = null;
-
-                                        if (x != captureWidth || y != captureHeight
-                                            || !imgCapture.TryGetValue(rgbaPtr, out captureImg))
-                                        {
-                                            if (captureImg != null)
-                                                captureImg.Dispose();
-
-                                            imgCapture[rgbaPtr] = captureImg = new Bitmap(x, y, x * 4, PixelFormat.Format32bppRgb, rgbaPtr);
-
-                                            captureWidth = x;
-                                            captureHeight = y;
-                                        }
-                                        g.DrawImage(captureImg, 0, 0, new Rectangle(Cursor.Position, new Size(screenWidth, screenHeight)), GraphicsUnit.Pixel);
-                                    }
-                                }
-                                break;
-                            }
-
-                            #endregion
-                        }
-
                         var rc = RectangleF.FromLTRB(0, 0, img.Width, img.Height);
                         g.DrawString(string.Format("{0}", DateTime.Now.ToString("hh:mm:ss.fff")), fBig, Brushes.LimeGreen, rc, sfTopRight);
                     }

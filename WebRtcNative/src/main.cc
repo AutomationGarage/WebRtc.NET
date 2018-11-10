@@ -1,4 +1,3 @@
-
 #pragma comment(lib,"crypt32.lib")
 #pragma comment(lib,"iphlpapi.lib")
 #pragma comment(lib,"secur32.lib")
@@ -40,11 +39,6 @@
 #pragma comment(lib,"webrtc-all.lib")
 
 #include "internals.h"
-
-#if DESKTOP_CAPTURE
-#pragma comment(lib,"dxgi.lib")
-#pragma comment(lib,"d3d11.lib")
-#endif
 
 #include "webrtc/base/ssladapter.h"
 #include "webrtc/base/win32socketinit.h"

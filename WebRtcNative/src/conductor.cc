@@ -1,4 +1,3 @@
-
 #include "defaults.h"
 #include "conductor.h"
 
@@ -175,34 +174,6 @@ extern "C"
 	__declspec(dllexport) void WINAPI PushFrame(Native::Conductor * cd, uint8_t * img, int type)
 	{
 		cd->PushFrame(img, type); // default: TJPF_BGR
-	}
-
-	__declspec(dllexport) uint8_t * WINAPI CaptureFrameBGRX(Native::Conductor * cd, int & w, int & h)
-	{
-#if DESKTOP_CAPTURE
-		int wn = 0, hn = 0;
-		auto b = cd->CaptureFrameBGRX(wn, hn);
-		if (b != nullptr)
-		{
-			w = wn;
-			h = hn;
-		}
-		return b;
-#else
-		return nullptr;
-#endif
-	}
-
-	__declspec(dllexport) void WINAPI CaptureFrameAndPush(Native::Conductor * cd)
-	{
-#if DESKTOP_CAPTURE
-		int wn = 0, hn = 0;
-		auto b = cd->CaptureFrameBGRX(wn, hn);
-		if (b != nullptr && wn == cd->width_ && hn == cd->height_)
-		{
-			cd->PushFrame(b, TJPF_BGRX);
-		}
-#endif
 	}
 
 	__declspec(dllexport) bool WINAPI RunStunServer(Native::Conductor * cd, const char * bindIp)
@@ -532,16 +503,12 @@ namespace Native
 
 					if (r == 0)
 					{
-						capturer->PushFrame(false);
+						capturer->PushFrame();
 					}
 					else
 					{
 						LOG(LS_ERROR) << tjGetErrorStr();
 					}
-				}
-				else
-				{
-					capturer->PushFrame(true);
 				}
 			}
 		}

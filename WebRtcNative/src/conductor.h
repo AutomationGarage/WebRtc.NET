@@ -1,4 +1,3 @@
-
 #ifndef WEBRTC_NET_CONDUCTOR_H_
 #define WEBRTC_NET_CONDUCTOR_H_
 #pragma once
@@ -51,24 +50,6 @@ namespace Native
 		bool OpenVideoCaptureDevice(const std::string & name);
 		void AddServerConfig(const std::string & uri, const std::string & username, const std::string & password);
 
-#if DESKTOP_CAPTURE
-		inline uint8_t * CaptureFrameBGRX(int & w, int & h)
-		{
-			if (capturer)
-			{
-				capturer->CaptureFrame();
-
-				if (capturer->desktop_frame)
-				{
-					webrtc::DesktopSize s = capturer->desktop_frame->size();
-					w = s.width();
-					h = s.height();
-					return capturer->desktop_frame->data();
-				}
-			}
-			return nullptr;
-		}
-#endif
 		void CreateDataChannel(const std::string & label);
 		void DataChannelSendText(const std::string & text);
 		void DataChannelSendData(const webrtc::DataBuffer & data);
