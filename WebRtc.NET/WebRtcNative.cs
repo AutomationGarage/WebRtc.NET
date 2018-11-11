@@ -332,19 +332,19 @@ namespace WebRtc.NET
 
         void _OnRenderLocal(IntPtr BGR24, UInt32 w, UInt32 h)
         {
-            OnRenderLocal(BGR24, w, h);
+            OnRenderLocal?.Invoke(BGR24, w, h);
         }
 
         void _OnRenderRemote(IntPtr BGR24, UInt32 w, UInt32 h)
         {
-            OnRenderRemote(BGR24, w, h);
+            OnRenderRemote?.Invoke(BGR24, w, h);
         }
 
         void _OnError()
         {
             Debug.WriteLine("OnError");
 
-            OnError("webrtc error");
+            OnError?.Invoke("webrtc error");
         }
 
         void _OnSuccess(String type, String sdp)
@@ -353,11 +353,11 @@ namespace WebRtc.NET
 
             if (type == "offer")
             {
-                OnSuccessOffer(sdp);
+                OnSuccessOffer?.Invoke(sdp);
             }
             else if (type == "answer")
             {
-                OnSuccessAnswer(sdp);
+                OnSuccessAnswer?.Invoke(sdp);
             }
         }
 
@@ -365,19 +365,19 @@ namespace WebRtc.NET
         {
             Debug.WriteLine(String.Format("OnIceCandidate: {0}", sdp));
 
-            OnIceCandidate(sdp_mid, sdp_mline_index, sdp);
+            OnIceCandidate?.Invoke(sdp_mid, sdp_mline_index, sdp);
         }
 
         void _OnFailure(String error)
         {
             Debug.WriteLine(String.Format("OnFailure: {0}", error));
 
-            OnFailure(error);
+            OnFailure?.Invoke(error);
         }
 
         void _OnDataMessage(String msg)
         {
-            OnDataMessage(msg);
+            OnDataMessage?.Invoke(msg);
         }
 
         void _OnDataBinaryMessage(IntPtr msg, UInt32 size)
@@ -386,7 +386,7 @@ namespace WebRtc.NET
 
             Marshal.Copy(msg, data_array, 0, (int)size);
 
-            OnDataBinaryMessage(data_array);
+            OnDataBinaryMessage?.Invoke(data_array);
         }
 
         #endregion
