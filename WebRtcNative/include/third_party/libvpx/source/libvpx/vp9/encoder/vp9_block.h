@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VP9_ENCODER_VP9_BLOCK_H_
-#define VP9_ENCODER_VP9_BLOCK_H_
+#ifndef VPX_VP9_ENCODER_VP9_BLOCK_H_
+#define VPX_VP9_ENCODER_VP9_BLOCK_H_
 
 #include "vpx_util/vpx_thread.h"
 
@@ -92,12 +92,8 @@ struct macroblock {
   int sadperbit4;
   int rddiv;
   int rdmult;
+  int cb_rdmult;
   int mb_energy;
-  int *m_search_count_ptr;
-  int *ex_search_count_ptr;
-#if CONFIG_MULTITHREAD
-  pthread_mutex_t *search_count_mutex;
-#endif
 
   // These are set to their default values at the beginning, and then adjusted
   // further in the encoding process.
@@ -119,6 +115,12 @@ struct macroblock {
   int *nmvsadcost[2];
   int *nmvsadcost_hp[2];
   int **mvsadcost;
+
+  // sharpness is used to disable skip mode and change rd_mult
+  int sharpness;
+
+  // aq mode is used to adjust rd based on segment.
+  int adjust_rdmult_by_segment;
 
   // These define limits to motion vector components to prevent them
   // from extending outside the UMV borders
@@ -173,7 +175,19 @@ struct macroblock {
 
   uint8_t skip_low_source_sad;
 
+  uint8_t lowvar_highsumdiff;
+
   uint8_t last_sb_high_content;
+
+  int sb_use_mv_part;
+
+  int sb_mvcol_part;
+
+  int sb_mvrow_part;
+
+  int sb_pickmode_part;
+
+  int zero_temp_sad_source;
 
   // For each superblock: saves the content value (e.g., low/high sad/sumdiff)
   // based on source sad, prior to encoding the frame.
@@ -184,16 +198,23 @@ struct macroblock {
   // 32x32, 9~24 for 16x16.
   uint8_t variance_low[25];
 
-  void (*fwd_txm4x4)(const int16_t *input, tran_low_t *output, int stride);
-  void (*itxm_add)(const tran_low_t *input, uint8_t *dest, int stride, int eob);
+  uint8_t arf_frame_usage;
+  uint8_t lastgolden_frame_usage;
+
+  void (*fwd_txfm4x4)(const int16_t *input, tran_low_t *output, int stride);
+  void (*inv_txfm_add)(const tran_low_t *input, uint8_t *dest, int stride,
+                       int eob);
 #if CONFIG_VP9_HIGHBITDEPTH
-  void (*highbd_itxm_add)(const tran_low_t *input, uint8_t *dest, int stride,
-                          int eob, int bd);
+  void (*highbd_inv_txfm_add)(const tran_low_t *input, uint16_t *dest,
+                              int stride, int eob, int bd);
 #endif
+#if CONFIG_ML_VAR_PARTITION
+  DECLARE_ALIGNED(16, uint8_t, est_pred[64 * 64]);
+#endif  // CONFIG_ML_VAR_PARTITION
 };
 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // VP9_ENCODER_VP9_BLOCK_H_
+#endif  // VPX_VP9_ENCODER_VP9_BLOCK_H_

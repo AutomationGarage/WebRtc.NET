@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VPX_DSP_VARIANCE_H_
-#define VPX_DSP_VARIANCE_H_
+#ifndef VPX_VPX_DSP_VARIANCE_H_
+#define VPX_VPX_DSP_VARIANCE_H_
 
 #include "./vpx_config.h"
 
@@ -74,8 +74,6 @@ typedef struct vp9_variance_vtable {
   vpx_variance_fn_t vf;
   vpx_subpixvariance_fn_t svf;
   vpx_subp_avg_variance_fn_t svaf;
-  vpx_sad_multi_fn_t sdx3f;
-  vpx_sad_multi_fn_t sdx8f;
   vpx_sad_multi_d_fn_t sdx4df;
 } vp9_variance_fn_ptr_t;
 #endif  // CONFIG_VP9
@@ -84,4 +82,4 @@ typedef struct vp9_variance_vtable {
 }  // extern "C"
 #endif
 
-#endif  // VPX_DSP_VARIANCE_H_
+#endif  // VPX_VPX_DSP_VARIANCE_H_

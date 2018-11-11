@@ -8,8 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VP9_ENCODER_VP9_FIRSTPASS_H_
-#define VP9_ENCODER_VP9_FIRSTPASS_H_
+#ifndef VPX_VP9_ENCODER_VP9_FIRSTPASS_H_
+#define VPX_VP9_ENCODER_VP9_FIRSTPASS_H_
+
+#include <assert.h>
 
 #include "vp9/encoder/vp9_lookahead.h"
 #include "vp9/encoder/vp9_ratectrl.h"
@@ -40,6 +42,8 @@ typedef struct {
 #endif
 
 #define INVALID_ROW -1
+
+#define MAX_ARF_LAYERS 6
 
 typedef struct {
   double frame_mb_intra_factor;
@@ -107,7 +111,9 @@ typedef enum {
   GF_UPDATE = 2,
   ARF_UPDATE = 3,
   OVERLAY_UPDATE = 4,
-  FRAME_UPDATE_TYPES = 5
+  MID_OVERLAY_UPDATE = 5,
+  USE_BUF_FRAME = 6,  // Use show existing frame, no ref buffer update
+  FRAME_UPDATE_TYPES = 7
 } FRAME_UPDATE_TYPE;
 
 #define FC_ANIMATION_THRESH 0.15
@@ -119,13 +125,19 @@ typedef enum {
 
 typedef struct {
   unsigned char index;
-  unsigned char first_inter_index;
-  RATE_FACTOR_LEVEL rf_level[(MAX_LAG_BUFFERS * 2) + 1];
-  FRAME_UPDATE_TYPE update_type[(MAX_LAG_BUFFERS * 2) + 1];
-  unsigned char arf_src_offset[(MAX_LAG_BUFFERS * 2) + 1];
-  unsigned char arf_update_idx[(MAX_LAG_BUFFERS * 2) + 1];
-  unsigned char arf_ref_idx[(MAX_LAG_BUFFERS * 2) + 1];
-  int bit_allocation[(MAX_LAG_BUFFERS * 2) + 1];
+  RATE_FACTOR_LEVEL rf_level[MAX_STATIC_GF_GROUP_LENGTH + 2];
+  FRAME_UPDATE_TYPE update_type[MAX_STATIC_GF_GROUP_LENGTH + 2];
+  unsigned char arf_src_offset[MAX_STATIC_GF_GROUP_LENGTH + 2];
+  unsigned char layer_depth[MAX_STATIC_GF_GROUP_LENGTH + 2];
+  int bit_allocation[MAX_STATIC_GF_GROUP_LENGTH + 2];
+  int gfu_boost[MAX_STATIC_GF_GROUP_LENGTH + 2];
+
+  int frame_start;
+  int frame_end;
+  // TODO(jingning): The array size of arf_stack could be reduced.
+  int arf_index_stack[MAX_LAG_BUFFERS * 2];
+  int top_arf_idx;
+  int stack_size;
 } GF_GROUP;
 
 typedef struct {
@@ -138,9 +150,8 @@ typedef struct {
   FIRSTPASS_STATS total_left_stats;
   int first_pass_done;
   int64_t bits_left;
-  double modified_error_min;
-  double modified_error_max;
-  double modified_error_left;
+  double mean_mod_score;
+  double normalized_score_left;
   double mb_av_energy;
   double mb_smooth_pct;
 
@@ -159,7 +170,7 @@ typedef struct {
   int64_t kf_group_bits;
 
   // Error score of frames still to be coded in kf group
-  int64_t kf_group_error_left;
+  double kf_group_error_left;
 
   double bpm_factor;
   int rolling_arf_group_target_bits;
@@ -183,7 +194,6 @@ struct ThreadData;
 struct TileDataEnc;
 
 void vp9_init_first_pass(struct VP9_COMP *cpi);
-void vp9_rc_get_first_pass_params(struct VP9_COMP *cpi);
 void vp9_first_pass(struct VP9_COMP *cpi, const struct lookahead_entry *source);
 void vp9_end_first_pass(struct VP9_COMP *cpi);
 
@@ -195,7 +205,6 @@ void vp9_first_pass_encode_tile_mb_row(struct VP9_COMP *cpi,
 
 void vp9_init_second_pass(struct VP9_COMP *cpi);
 void vp9_rc_get_second_pass_params(struct VP9_COMP *cpi);
-void vp9_twopass_postencode_update(struct VP9_COMP *cpi);
 
 // Post encode update of the rate control parameters for 2-pass
 void vp9_twopass_postencode_update(struct VP9_COMP *cpi);
@@ -207,4 +216,4 @@ void calculate_coded_size(struct VP9_COMP *cpi, int *scaled_frame_width,
 }  // extern "C"
 #endif
 
-#endif  // VP9_ENCODER_VP9_FIRSTPASS_H_
+#endif  // VPX_VP9_ENCODER_VP9_FIRSTPASS_H_

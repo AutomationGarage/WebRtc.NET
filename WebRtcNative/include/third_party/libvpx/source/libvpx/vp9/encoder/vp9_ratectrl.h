@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VP9_ENCODER_VP9_RATECTRL_H_
-#define VP9_ENCODER_VP9_RATECTRL_H_
+#ifndef VPX_VP9_ENCODER_VP9_RATECTRL_H_
+#define VPX_VP9_ENCODER_VP9_RATECTRL_H_
 
 #include "vpx/vpx_codec.h"
 #include "vpx/vpx_integer.h"
@@ -31,6 +31,16 @@ extern "C" {
 #define MAX_GF_INTERVAL 16
 #define FIXED_GF_INTERVAL 8  // Used in some testing modes only
 #define ONEHALFONLY_RESIZE 0
+
+#define FRAME_OVERHEAD_BITS 200
+
+// Threshold used to define a KF group as static (e.g. a slide show).
+// Essentially this means that no frame in the group has more than 1% of MBs
+// that are not marked as coded with 0,0 motion in the first pass.
+#define STATIC_KF_GROUP_THRESH 99
+
+// The maximum duration of a GF group that is static (for example a slide show).
+#define MAX_STATIC_GF_GROUP_LENGTH 250
 
 typedef enum {
   INTER_NORMAL = 0,
@@ -150,6 +160,8 @@ typedef struct {
   int rc_2_frame;
   int q_1_frame;
   int q_2_frame;
+  // Keep track of the last target average frame bandwidth.
+  int last_avg_frame_bandwidth;
 
   // Auto frame-scaling variables.
   FRAME_SCALE_LEVEL frame_size_selector;
@@ -164,11 +176,16 @@ typedef struct {
   uint64_t prev_avg_source_sad_lag;
   int high_source_sad_lagindex;
   int alt_ref_gf_group;
+  int last_frame_is_src_altref;
   int high_source_sad;
   int count_last_scene_change;
+  int hybrid_intra_scene_change;
+  int re_encode_maxq_scene_change;
   int avg_frame_low_motion;
   int af_ratio_onepass_vbr;
   int force_qpmin;
+  int reset_high_source_sad;
+  double perc_arf_usage;
 } RATE_CONTROL;
 
 struct VP9_COMP;
@@ -287,8 +304,12 @@ void vp9_scene_detection_onepass(struct VP9_COMP *cpi);
 
 int vp9_encodedframe_overshoot(struct VP9_COMP *cpi, int frame_size, int *q);
 
+void vp9_configure_buffer_updates(struct VP9_COMP *cpi, int gf_group_index);
+
+void vp9_estimate_qp_gop(struct VP9_COMP *cpi);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // VP9_ENCODER_VP9_RATECTRL_H_
+#endif  // VPX_VP9_ENCODER_VP9_RATECTRL_H_

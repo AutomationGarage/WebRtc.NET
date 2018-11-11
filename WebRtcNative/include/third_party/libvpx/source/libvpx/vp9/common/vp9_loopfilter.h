@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VP9_COMMON_VP9_LOOPFILTER_H_
-#define VP9_COMMON_VP9_LOOPFILTER_H_
+#ifndef VPX_VP9_COMMON_VP9_LOOPFILTER_H_
+#define VPX_VP9_COMMON_VP9_LOOPFILTER_H_
 
 #include "vpx_ports/mem.h"
 #include "./vpx_config.h"
@@ -151,10 +151,10 @@ void vp9_loop_filter_data_reset(
     LFWorkerData *lf_data, YV12_BUFFER_CONFIG *frame_buffer,
     struct VP9Common *cm, const struct macroblockd_plane planes[MAX_MB_PLANE]);
 
-// Operates on the rows described by 'lf_data'.
-int vp9_loop_filter_worker(LFWorkerData *const lf_data, void *unused);
+// Operates on the rows described by 'arg1' (cast to LFWorkerData *).
+int vp9_loop_filter_worker(void *arg1, void *unused);
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // VP9_COMMON_VP9_LOOPFILTER_H_
+#endif  // VPX_VP9_COMMON_VP9_LOOPFILTER_H_

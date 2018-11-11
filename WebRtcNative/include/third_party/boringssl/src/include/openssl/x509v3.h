@@ -63,6 +63,15 @@
 extern "C" {
 #endif
 
+
+/* Legacy X.509 library.
+ *
+ * This header is part of OpenSSL's X.509 implementation. It is retained for
+ * compatibility but otherwise underdocumented and not actively maintained. In
+ * the future, a replacement library will be available. Meanwhile, minimize
+ * dependencies on this header where possible. */
+
+
 /* Forward reference */
 struct v3_ext_method;
 struct v3_ext_ctx;
@@ -137,7 +146,7 @@ void *db;
 
 typedef struct v3_ext_method X509V3_EXT_METHOD;
 
-DECLARE_STACK_OF(X509V3_EXT_METHOD)
+DEFINE_STACK_OF(X509V3_EXT_METHOD)
 
 /* ext_flags values */
 #define X509V3_EXT_DYNAMIC	0x1
@@ -201,22 +210,24 @@ union {
 } d;
 } GENERAL_NAME;
 
+DEFINE_STACK_OF(GENERAL_NAME)
+DECLARE_ASN1_SET_OF(GENERAL_NAME)
+
 typedef STACK_OF(GENERAL_NAME) GENERAL_NAMES;
+
+DEFINE_STACK_OF(GENERAL_NAMES)
 
 typedef struct ACCESS_DESCRIPTION_st {
 	ASN1_OBJECT *method;
 	GENERAL_NAME *location;
 } ACCESS_DESCRIPTION;
 
+DEFINE_STACK_OF(ACCESS_DESCRIPTION)
+DECLARE_ASN1_SET_OF(ACCESS_DESCRIPTION)
+
 typedef STACK_OF(ACCESS_DESCRIPTION) AUTHORITY_INFO_ACCESS;
 
 typedef STACK_OF(ASN1_OBJECT) EXTENDED_KEY_USAGE;
-
-DECLARE_STACK_OF(GENERAL_NAME)
-DECLARE_ASN1_SET_OF(GENERAL_NAME)
-
-DECLARE_STACK_OF(ACCESS_DESCRIPTION)
-DECLARE_ASN1_SET_OF(ACCESS_DESCRIPTION)
 
 typedef struct DIST_POINT_NAME_st {
 int type;
@@ -251,7 +262,7 @@ int dp_reasons;
 
 typedef STACK_OF(DIST_POINT) CRL_DIST_POINTS;
 
-DECLARE_STACK_OF(DIST_POINT)
+DEFINE_STACK_OF(DIST_POINT)
 DECLARE_ASN1_SET_OF(DIST_POINT)
 
 struct AUTHORITY_KEYID_st {
@@ -267,7 +278,7 @@ typedef struct SXNET_ID_st {
 	ASN1_OCTET_STRING *user;
 } SXNETID;
 
-DECLARE_STACK_OF(SXNETID)
+DEFINE_STACK_OF(SXNETID)
 DECLARE_ASN1_SET_OF(SXNETID)
 
 typedef struct SXNET_st {
@@ -294,7 +305,7 @@ typedef struct POLICYQUALINFO_st {
 	} d;
 } POLICYQUALINFO;
 
-DECLARE_STACK_OF(POLICYQUALINFO)
+DEFINE_STACK_OF(POLICYQUALINFO)
 DECLARE_ASN1_SET_OF(POLICYQUALINFO)
 
 typedef struct POLICYINFO_st {
@@ -304,7 +315,7 @@ typedef struct POLICYINFO_st {
 
 typedef STACK_OF(POLICYINFO) CERTIFICATEPOLICIES;
 
-DECLARE_STACK_OF(POLICYINFO)
+DEFINE_STACK_OF(POLICYINFO)
 DECLARE_ASN1_SET_OF(POLICYINFO)
 
 typedef struct POLICY_MAPPING_st {
@@ -312,7 +323,7 @@ typedef struct POLICY_MAPPING_st {
 	ASN1_OBJECT *subjectDomainPolicy;
 } POLICY_MAPPING;
 
-DECLARE_STACK_OF(POLICY_MAPPING)
+DEFINE_STACK_OF(POLICY_MAPPING)
 
 typedef STACK_OF(POLICY_MAPPING) POLICY_MAPPINGS;
 
@@ -322,7 +333,7 @@ typedef struct GENERAL_SUBTREE_st {
 	ASN1_INTEGER *maximum;
 } GENERAL_SUBTREE;
 
-DECLARE_STACK_OF(GENERAL_SUBTREE)
+DEFINE_STACK_OF(GENERAL_SUBTREE)
 
 struct NAME_CONSTRAINTS_st {
 	STACK_OF(GENERAL_SUBTREE) *permittedSubtrees;
@@ -501,7 +512,7 @@ typedef struct x509_purpose_st {
 #define X509V3_ADD_DELETE		5L
 #define X509V3_ADD_SILENT		0x10
 
-DECLARE_STACK_OF(X509_PURPOSE)
+DEFINE_STACK_OF(X509_PURPOSE)
 
 DECLARE_ASN1_FUNCTIONS(BASIC_CONSTRAINTS)
 
@@ -600,16 +611,14 @@ OPENSSL_EXPORT GENERAL_NAME *v2i_GENERAL_NAME_ex(GENERAL_NAME *out,
 				  X509V3_CTX *ctx, CONF_VALUE *cnf, int is_nc);
 OPENSSL_EXPORT void X509V3_conf_free(CONF_VALUE *val);
 
-OPENSSL_EXPORT X509_EXTENSION *X509V3_EXT_conf_nid(LHASH_OF(CONF_VALUE) *conf, X509V3_CTX *ctx, int ext_nid, char *value);
+typedef struct x509_must_be_null_st X509_MUST_BE_NULL;
+OPENSSL_EXPORT X509_EXTENSION *X509V3_EXT_conf_nid(X509_MUST_BE_NULL *conf, X509V3_CTX *ctx, int ext_nid, char *value);
 OPENSSL_EXPORT X509_EXTENSION *X509V3_EXT_nconf_nid(CONF *conf, X509V3_CTX *ctx, int ext_nid, char *value);
 OPENSSL_EXPORT X509_EXTENSION *X509V3_EXT_nconf(CONF *conf, X509V3_CTX *ctx, char *name, char *value);
 OPENSSL_EXPORT int X509V3_EXT_add_nconf_sk(CONF *conf, X509V3_CTX *ctx, char *section, STACK_OF(X509_EXTENSION) **sk);
 OPENSSL_EXPORT int X509V3_EXT_add_nconf(CONF *conf, X509V3_CTX *ctx, char *section, X509 *cert);
 OPENSSL_EXPORT int X509V3_EXT_REQ_add_nconf(CONF *conf, X509V3_CTX *ctx, char *section, X509_REQ *req);
 OPENSSL_EXPORT int X509V3_EXT_CRL_add_nconf(CONF *conf, X509V3_CTX *ctx, char *section, X509_CRL *crl);
-
-OPENSSL_EXPORT int X509V3_EXT_CRL_add_conf(LHASH_OF(CONF_VALUE) *conf, X509V3_CTX *ctx,
-			    char *section, X509_CRL *crl);
 
 OPENSSL_EXPORT int X509V3_add_value_bool_nf(char *name, int asn1_bool,
 			     STACK_OF(CONF_VALUE) **extlist);
@@ -670,6 +679,11 @@ OPENSSL_EXPORT int X509_supported_extension(X509_EXTENSION *ex);
 OPENSSL_EXPORT int X509_PURPOSE_set(int *p, int purpose);
 OPENSSL_EXPORT int X509_check_issued(X509 *issuer, X509 *subject);
 OPENSSL_EXPORT int X509_check_akid(X509 *issuer, AUTHORITY_KEYID *akid);
+
+OPENSSL_EXPORT uint32_t X509_get_extension_flags(X509 *x);
+OPENSSL_EXPORT uint32_t X509_get_key_usage(X509 *x);
+OPENSSL_EXPORT uint32_t X509_get_extended_key_usage(X509 *x);
+
 OPENSSL_EXPORT int X509_PURPOSE_get_count(void);
 OPENSSL_EXPORT X509_PURPOSE * X509_PURPOSE_get0(int idx);
 OPENSSL_EXPORT int X509_PURPOSE_get_by_sname(char *sname);
@@ -721,13 +735,12 @@ OPENSSL_EXPORT int X509V3_NAME_from_section(X509_NAME *nm, STACK_OF(CONF_VALUE)*
 						unsigned long chtype);
 
 OPENSSL_EXPORT void X509_POLICY_NODE_print(BIO *out, X509_POLICY_NODE *node, int indent);
-DECLARE_STACK_OF(X509_POLICY_NODE)
+DEFINE_STACK_OF(X509_POLICY_NODE)
 
 /* BEGIN ERROR CODES */
 /* The following lines are auto generated by the script mkerr.pl. Any changes
  * made after this point may be overwritten when the script is next run.
  */
-void ERR_load_X509V3_strings(void);
 
 
 #ifdef  __cplusplus
@@ -735,19 +748,16 @@ void ERR_load_X509V3_strings(void);
 
 extern "C++" {
 
-namespace bssl {
+BSSL_NAMESPACE_BEGIN
 
-BORINGSSL_MAKE_STACK_DELETER(DIST_POINT, DIST_POINT_free)
-BORINGSSL_MAKE_STACK_DELETER(GENERAL_NAME, GENERAL_NAME_free)
-// A STACK_OF(POLICYINFO) is also known as a CERTIFICATEPOLICIES.
-BORINGSSL_MAKE_STACK_DELETER(POLICYINFO, POLICYINFO_free)
-
+BORINGSSL_MAKE_DELETER(ACCESS_DESCRIPTION, ACCESS_DESCRIPTION_free)
 BORINGSSL_MAKE_DELETER(AUTHORITY_KEYID, AUTHORITY_KEYID_free)
 BORINGSSL_MAKE_DELETER(BASIC_CONSTRAINTS, BASIC_CONSTRAINTS_free)
 BORINGSSL_MAKE_DELETER(DIST_POINT, DIST_POINT_free)
 BORINGSSL_MAKE_DELETER(GENERAL_NAME, GENERAL_NAME_free)
+BORINGSSL_MAKE_DELETER(POLICYINFO, POLICYINFO_free)
 
-}  // namespace bssl
+BSSL_NAMESPACE_END
 
 }  /* extern C++ */
 #endif

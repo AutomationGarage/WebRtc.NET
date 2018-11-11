@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VPX_DSP_VPX_FILTER_H_
-#define VPX_DSP_VPX_FILTER_H_
+#ifndef VPX_VPX_DSP_VPX_FILTER_H_
+#define VPX_VPX_DSP_VPX_FILTER_H_
 
 #include "vpx/vpx_integer.h"
 
@@ -26,19 +26,8 @@ extern "C" {
 
 typedef int16_t InterpKernel[SUBPEL_TAPS];
 
-static INLINE const InterpKernel *get_filter_base(const int16_t *filter) {
-  // NOTE: This assumes that the filter table is 256-byte aligned.
-  // TODO(agrange) Modify to make independent of table alignment.
-  return (const InterpKernel *)(((intptr_t)filter) & ~((intptr_t)0xFF));
-}
-
-static INLINE int get_filter_offset(const int16_t *f,
-                                    const InterpKernel *base) {
-  return (int)((const InterpKernel *)(intptr_t)f - base);
-}
-
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // VPX_DSP_VPX_FILTER_H_
+#endif  // VPX_VPX_DSP_VPX_FILTER_H_

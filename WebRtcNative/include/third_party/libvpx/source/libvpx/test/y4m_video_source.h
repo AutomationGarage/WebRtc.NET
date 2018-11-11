@@ -7,8 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef TEST_Y4M_VIDEO_SOURCE_H_
-#define TEST_Y4M_VIDEO_SOURCE_H_
+#ifndef VPX_TEST_Y4M_VIDEO_SOURCE_H_
+#define VPX_TEST_Y4M_VIDEO_SOURCE_H_
 #include <algorithm>
 #include <string>
 
@@ -34,8 +34,8 @@ class Y4mVideoSource : public VideoSource {
   virtual void OpenSource() {
     CloseSource();
     input_file_ = OpenTestDataFile(file_name_);
-    ASSERT_TRUE(input_file_ != NULL) << "Input file open failed. Filename: "
-                                     << file_name_;
+    ASSERT_TRUE(input_file_ != NULL)
+        << "Input file open failed. Filename: " << file_name_;
   }
 
   virtual void ReadSourceToStart() {
@@ -119,4 +119,4 @@ class Y4mVideoSource : public VideoSource {
 
 }  // namespace libvpx_test
 
-#endif  // TEST_Y4M_VIDEO_SOURCE_H_
+#endif  // VPX_TEST_Y4M_VIDEO_SOURCE_H_

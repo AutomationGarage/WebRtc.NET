@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VP8_ENCODER_RDOPT_H_
-#define VP8_ENCODER_RDOPT_H_
+#ifndef VPX_VP8_ENCODER_RDOPT_H_
+#define VPX_VP8_ENCODER_RDOPT_H_
 
 #include "./vpx_config.h"
 
@@ -18,6 +18,9 @@ extern "C" {
 #endif
 
 #define RDCOST(RM, DM, R, D) (((128 + (R) * (RM)) >> 8) + (DM) * (D))
+
+void vp8cx_initialize_me_consts(VP8_COMP *cpi, int QIndex);
+void vp8_auto_select_speed(VP8_COMP *cpi);
 
 static INLINE void insertsortmv(int arr[], int len) {
   int i, j, k;
@@ -120,4 +123,4 @@ void vp8_set_mbmode_and_mvs(MACROBLOCK *x, MB_PREDICTION_MODE mb, int_mv *mv);
 }  // extern "C"
 #endif
 
-#endif  // VP8_ENCODER_RDOPT_H_
+#endif  // VPX_VP8_ENCODER_RDOPT_H_
