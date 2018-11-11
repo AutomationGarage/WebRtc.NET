@@ -10,3 +10,8 @@ obj
 /WebRtc.NET.VC.db
 /WebRtc.NET.VC.VC.opendb
 /ipch
+
+/WebRtcNative/Release
+/WebRtcNative/Release_x64
+/WebRtcNative/Debug
+/WebRtcNative/Debug_x64
