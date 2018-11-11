@@ -1,21 +1,24 @@
+
 #ifndef WEBRTC_NET_DEFAULTS_H_
 #define WEBRTC_NET_DEFAULTS_H_
 #pragma once
 
 #include "internals.h"
-
-#include "webrtc/media/base/videocapturer.h"
-#include "webrtc/api/mediastreaminterface.h"
+#include "rtc_base/logging.h"
+#include "media/base/videocapturer.h"
+#include "api/video/i420_buffer.h"
+#include "api/mediastreaminterface.h"
+#include "modules/desktop_capture/desktop_capturer.h"
 
 namespace Native
 {
 	class Conductor;
 
-	class YuvFramesCapturer2 : public cricket::VideoCapturer
+	class YuvFramesCapturer : public cricket::VideoCapturer, webrtc::DesktopCapturer::Callback
 	{
 	public:
-		YuvFramesCapturer2(Conductor & c);
-		virtual ~YuvFramesCapturer2();
+		YuvFramesCapturer(Conductor & c);
+		virtual ~YuvFramesCapturer();
 
 		// Override virtual methods of parent class VideoCapturer.
 		virtual cricket::CaptureState Start(const cricket::VideoFormat& capture_format);
@@ -24,6 +27,12 @@ namespace Native
 		virtual bool IsScreencast() const { return false; }
 
 		void PushFrame();
+
+		void CaptureFrame();
+		virtual void OnCaptureResult(webrtc::DesktopCapturer::Result result, std::unique_ptr<webrtc::DesktopFrame> frame);
+		std::unique_ptr<webrtc::DesktopFrame> desktop_frame;
+		webrtc::DesktopCapturer::SourceList desktop_screens;
+
 		rtc::scoped_refptr<webrtc::I420Buffer> video_buffer;
 		uint32_t frame_data_size_;
 
@@ -34,6 +43,7 @@ namespace Native
 		Conductor * con;
 		webrtc::VideoFrame * video_frame;
 		bool run;
+		std::unique_ptr<webrtc::DesktopCapturer> desktop_capturer;
 	};
 
 	class VideoRenderer : public rtc::VideoSinkInterface<webrtc::VideoFrame>
@@ -53,7 +63,7 @@ namespace Native
 	protected:
 		int DecodeYUV(const uint8_t * yuv, int & width, int & height);
 
-		void * jpeg;
+		void * jpegDecompressor;
 		uint8_t * bgr24;
 		bool remote;
 		Conductor * con;

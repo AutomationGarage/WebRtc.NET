@@ -176,6 +176,22 @@ namespace WebRtc.NET
             PushFrame(p, img, (int)type);
         }
 
+        [SuppressUnmanagedCodeSecurity]
+        [DllImport(dll)]
+        static extern IntPtr CaptureFrameBGRX(IntPtr p, ref Int32 width, ref Int32 height);
+        public IntPtr CaptureFrameBGRX(ref Int32 width, ref Int32 height)
+        {
+            return CaptureFrameBGRX(p, ref width, ref height);
+        }
+
+        [SuppressUnmanagedCodeSecurity]
+        [DllImport(dll)]
+        static extern void CaptureFrameAndPush(IntPtr p);
+        public void CaptureFrameAndPush()
+        {
+            CaptureFrameAndPush(p);
+        }
+
         #endregion
 
         #region -- Etc --

@@ -1,11 +1,12 @@
+
 #ifndef WEBRTC_NET_CONDUCTOR_H_
 #define WEBRTC_NET_CONDUCTOR_H_
 #pragma once
 
 #include "internals.h"
 
-#include "webrtc/api/mediastreaminterface.h"
-#include "webrtc/api/peerconnectioninterface.h"
+#include "api/mediastreaminterface.h"
+#include "api/peerconnectioninterface.h"
 
 namespace cricket
 {
@@ -50,6 +51,23 @@ namespace Native
 		bool OpenVideoCaptureDevice(const std::string & name);
 		void AddServerConfig(const std::string & uri, const std::string & username, const std::string & password);
 
+		inline uint8_t * CaptureFrameBGRX(int & w, int & h)
+		{
+			if (external_capturer)
+			{
+				external_capturer->CaptureFrame();
+
+				if (external_capturer->desktop_frame)
+				{
+					webrtc::DesktopSize s = external_capturer->desktop_frame->size();
+					w = s.width();
+					h = s.height();
+					return external_capturer->desktop_frame->data();
+				}
+			}
+			return nullptr;
+		}
+		
 		void CreateDataChannel(const std::string & label);
 		void DataChannelSendText(const std::string & text);
 		void DataChannelSendData(const webrtc::DataBuffer & data);
@@ -73,7 +91,7 @@ namespace Native
 
 		virtual void webrtc::SetSessionDescriptionObserver::OnSuccess()
 		{
-			LOG(INFO) << __FUNCTION__;
+			RTC_LOG(INFO) << __FUNCTION__;
 		}
 
 #pragma endregion
@@ -94,32 +112,27 @@ namespace Native
 
 		virtual void OnIceChange()
 		{
-			LOG(INFO) << __FUNCTION__ << " ";
+			RTC_LOG(INFO) << __FUNCTION__ << " ";
 		}
 
 		virtual void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState state)
 		{
-			LOG(INFO) << __FUNCTION__ << " " << state;
+			RTC_LOG(INFO) << __FUNCTION__ << " " << state;
 		}
 
 		virtual void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state)
 		{
-			LOG(INFO) << __FUNCTION__ << " " << state;
+			RTC_LOG(INFO) << __FUNCTION__ << " " << state;
 		}
 
 		virtual void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState state)
 		{
-			LOG(INFO) << __FUNCTION__ << " " << state;
-		}
-
-		virtual void OnStateChange(webrtc::PeerConnectionObserver::StateType state_changed)
-		{
-			LOG(INFO) << __FUNCTION__ << " " << state_changed;
+			RTC_LOG(INFO) << __FUNCTION__ << " " << state;
 		}
 
 		virtual void OnRenegotiationNeeded()
 		{
-			LOG(INFO) << __FUNCTION__ << " ";
+			RTC_LOG(INFO) << __FUNCTION__ << " ";
 		}
 
 #pragma endregion
@@ -131,7 +144,7 @@ namespace Native
 		// The data channel state have changed.
 		virtual void OnStateChange()
 		{
-			LOG(INFO) << __FUNCTION__;
+			RTC_LOG(INFO) << __FUNCTION__;
 		}
 
 		//  A data buffer was successfully received.
@@ -140,18 +153,16 @@ namespace Native
 		// The data channel's buffered_amount has changed.
 		virtual void OnBufferedAmountChange(uint64_t previous_amount)
 		{
-			LOG(INFO) << __FUNCTION__;
+			RTC_LOG(INFO) << __FUNCTION__;
 		}
 
 #pragma endregion
 
-		int AddRef() const
+		void AddRef() const { };
+
+		rtc::RefCountReleaseStatus Release() const
 		{
-			return 0;
-		};
-		int Release() const
-		{
-			return 0;
+			return rtc::RefCountReleaseStatus::kOtherRefsRemained;
 		};
 
 	private:
@@ -166,8 +177,8 @@ namespace Native
 		rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel;
 		std::vector<webrtc::PeerConnectionInterface::IceServer> serverConfigs;
 
-		YuvFramesCapturer2 * capturer;
-		std::unique_ptr<cricket::VideoCapturer> capturer_internal;
+		YuvFramesCapturer * external_capturer;
+		std::unique_ptr<cricket::VideoCapturer> internal_capturer;
 
 		std::unique_ptr<VideoRenderer> local_video;
 		std::unique_ptr<VideoRenderer> remote_video;

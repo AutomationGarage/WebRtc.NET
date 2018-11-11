@@ -1,48 +1,30 @@
-#pragma comment(lib,"crypt32.lib")
-#pragma comment(lib,"iphlpapi.lib")
+
 #pragma comment(lib,"secur32.lib")
 #pragma comment(lib,"winmm.lib")
 #pragma comment(lib,"dmoguids.lib")
 #pragma comment(lib,"wmcodecdspuuid.lib")
-#pragma comment(lib,"amstrmid.lib")
 #pragma comment(lib,"msdmo.lib")
 #pragma comment(lib,"Strmiids.lib")
 
-// common
-#pragma comment(lib,"wininet.lib")
-#pragma comment(lib,"dnsapi.lib")
-#pragma comment(lib,"version.lib")
-#pragma comment(lib,"msimg32.lib")
-#pragma comment(lib,"ws2_32.lib")
-#pragma comment(lib,"usp10.lib")
-#pragma comment(lib,"psapi.lib")
-#pragma comment(lib,"dbghelp.lib")
-#pragma comment(lib,"shlwapi.lib")
-#pragma comment(lib,"kernel32.lib")
-#pragma comment(lib,"gdi32.lib")
-#pragma comment(lib,"winspool.lib")
-#pragma comment(lib,"comdlg32.lib")
-#pragma comment(lib,"advapi32.lib")
-#pragma comment(lib,"shell32.lib")
-#pragma comment(lib,"ole32.lib")
-#pragma comment(lib,"oleaut32.lib")
-#pragma comment(lib,"user32.lib")
-#pragma comment(lib,"uuid.lib")
-#pragma comment(lib,"odbc32.lib")
-#pragma comment(lib,"odbccp32.lib")
-#pragma comment(lib,"delayimp.lib")
-#pragma comment(lib,"credui.lib")
-#pragma comment(lib,"netapi32.lib")
+#pragma comment(lib,"bbr.lib")
+#pragma comment(lib,"bandwidth_sampler.lib")
+#pragma comment(lib,"bbr_controller.lib")
+#pragma comment(lib,"loss_rate_filter.lib")
+#pragma comment(lib,"rtt_stats.lib")
 
-// internal
-#pragma comment(lib,"turbojpeg-static.lib")
-#pragma comment(lib,"webrtc-all.lib")
+#pragma comment(lib,"create_pc_factory.lib")
+#pragma comment(lib,"peerconnection.lib")
+#pragma comment(lib,"builtin_video_decoder_factory.lib")
+#pragma comment(lib,"builtin_video_encoder_factory.lib")
+
+#pragma comment(lib,"webrtc.lib")
 
 #include "internals.h"
 
-#include "webrtc/base/ssladapter.h"
-#include "webrtc/base/win32socketinit.h"
-#include "webrtc/base/win32socketserver.h"
+#pragma comment(lib,"dxgi.lib")
+#pragma comment(lib,"d3d11.lib")
+
+#include "rtc_base/ssladapter.h"
 
 namespace Native
 {
@@ -50,8 +32,7 @@ namespace Native
 
 	void InitializeSSL()
 	{
-		rtc::EnsureWinsockInit();
-		rtc::InitializeSSL(NULL);
+		rtc::InitializeSSL();
 	}
 
 	void CleanupSSL()

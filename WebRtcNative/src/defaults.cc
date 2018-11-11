@@ -1,7 +1,9 @@
 #include "defaults.h"
 #include "conductor.h"
 
-#include "turbojpeg/turbojpeg.h"
+#include "third_party/libjpeg_turbo/turbojpeg.h"
+#include "modules/desktop_capture/desktop_capture_options.h"
+#include "modules/desktop_capture/desktop_capturer.h"
 
 namespace Native
 {
@@ -10,7 +12,7 @@ namespace Native
 		return stride_y * height + (stride_u + stride_v) * ((height + 1) / 2);
 	}
 
-	YuvFramesCapturer2::YuvFramesCapturer2(Conductor & c) : run(false), con(&c)
+	YuvFramesCapturer::YuvFramesCapturer(Conductor & c) : run(false), con(&c), desktop_capturer(nullptr)
 	{
 		video_buffer = webrtc::I420Buffer::Create(con->width_, con->height_);
 		frame_data_size_ = I420DataSize(con->height_, video_buffer->StrideY(), video_buffer->StrideU(), video_buffer->StrideV());
@@ -19,15 +21,15 @@ namespace Native
 
 		// Enumerate the supported formats. We have only one supported format.
 		cricket::VideoFormat format(con->width_, con->height_, cricket::VideoFormat::FpsToInterval(con->caputureFps), cricket::FOURCC_IYUV);
+		
 		std::vector<cricket::VideoFormat> supported;
 		supported.push_back(format);
 		SetSupportedFormats(supported);
 
 		set_enable_video_adapter(false);
-		//set_square_pixel_aspect_ratio(false);
 	}
 
-	YuvFramesCapturer2::~YuvFramesCapturer2()
+	YuvFramesCapturer::~YuvFramesCapturer()
 	{
 		if (video_frame)
 		{
@@ -38,43 +40,47 @@ namespace Native
 		Stop();
 	}
 
-	cricket::CaptureState YuvFramesCapturer2::Start(const cricket::VideoFormat& capture_format)
+	cricket::CaptureState YuvFramesCapturer::Start(const cricket::VideoFormat& capture_format)
 	{
-		if (IsRunning())
-		{
-			LOG(LS_ERROR) << "Yuv Frame Generator is already running";
-			return cricket::CS_FAILED;
-		}
-
+		if (IsRunning()) { return cricket::CS_FAILED; }
 		SetCaptureFormat(&capture_format);
 		run = true;
 
-		LOG(LS_INFO) << "Yuv Frame Generator started";
+		webrtc::DesktopCaptureOptions co;
+		co.set_allow_directx_capturer(true);
+
+		desktop_capturer = webrtc::DesktopCapturer::CreateScreenCapturer(co);
+
+		desktop_capturer->GetSourceList(&desktop_screens);
+		for each(auto & s in desktop_screens)
+		{
+			RTC_LOG(INFO) << "screen: " << s.id << " -> " << s.title;
+		}
+		desktop_capturer->SelectSource(desktop_screens[0].id);
+		desktop_capturer->Start(this);
+
 		return cricket::CS_RUNNING;
 	}
 
-	bool YuvFramesCapturer2::IsRunning()
+	bool YuvFramesCapturer::IsRunning()
 	{
 		return run;
 	}
 
-	void YuvFramesCapturer2::Stop()
+	void YuvFramesCapturer::Stop()
 	{
 		run = false;
 		SetCaptureFormat(nullptr);
 	}
 
-	bool YuvFramesCapturer2::GetPreferredFourccs(std::vector<uint32_t>* fourccs)
+	bool YuvFramesCapturer::GetPreferredFourccs(std::vector<uint32_t>* fourccs)
 	{
-		if (!fourccs)
-		{
-			return false;
-		}
+		if (!fourccs) { return false; }
 		fourccs->push_back(GetSupportedFormats()->at(0).fourcc);
 		return true;
 	}
 
-	void YuvFramesCapturer2::PushFrame()
+	void YuvFramesCapturer::PushFrame()
 	{
 		int64_t camera_time_us = rtc::TimeMicros();
 		int64_t system_time_us = camera_time_us;
@@ -104,6 +110,23 @@ namespace Native
 		}
 	}
 
+	void YuvFramesCapturer::CaptureFrame()
+	{
+		if (desktop_capturer)
+		{
+			desktop_capturer->CaptureFrame();
+		}
+	}
+
+	// webrtc::DesktopCapturer::Callback implementation
+	void YuvFramesCapturer::OnCaptureResult(webrtc::DesktopCapturer::Result result, std::unique_ptr<webrtc::DesktopFrame> frame)
+	{
+		if (desktop_capturer)
+		{
+			desktop_frame.reset(frame.release());
+		}
+	}
+
 	// VideoSinkInterface implementation
 	void VideoRenderer::OnFrame(const webrtc::VideoFrame & frame)
 	{
@@ -113,7 +136,8 @@ namespace Native
 			int width = b->width();
 			int height = b->height();
 
-			if (0 == DecodeYUV(b->DataY(), width, height))
+			auto b420 = b->ToI420();
+			if (0 == DecodeYUV(b420->DataY(), width, height))
 			{
 				con->onRenderRemote(bgr24, width, height);
 			}
@@ -124,7 +148,8 @@ namespace Native
 			int width = b->width();
 			int height = b->height();
 
-			if (0 == DecodeYUV(b->DataY(), width, height))
+			auto b420 = b->ToI420();
+			if (0 == DecodeYUV(b420->DataY(), width, height))
 			{
 				con->onRenderLocal(bgr24, width, height);
 			}
@@ -133,8 +158,10 @@ namespace Native
 
 	inline int VideoRenderer::DecodeYUV(const uint8_t * yuv, int & width, int & height)
 	{
-		if (jpeg == nullptr)
-			jpeg = tjInitDecompress();
+		if (jpegDecompressor == nullptr) 
+		{
+			jpegDecompressor = tjInitDecompress();
+		}
 
 		const int pad = 4;
 		int pitch = TJPAD(tjPixelSize[TJPF_BGR] * width);
@@ -142,16 +169,20 @@ namespace Native
 		if (bgr24 == nullptr)
 			bgr24 = new uint8_t[pitch * height];
 
-		return tjDecodeYUV(jpeg, yuv, pad, TJSAMP_420, bgr24, width, pitch, height, TJPF_BGR, true ? TJFLAG_FASTDCT : TJFLAG_ACCURATEDCT);
+		return tjDecodeYUV(jpegDecompressor, yuv, pad, TJSAMP_420, bgr24, width, pitch, height, TJPF_BGR, true ? TJFLAG_FASTDCT : TJFLAG_ACCURATEDCT);
 	}
 
 	VideoRenderer::~VideoRenderer()
 	{
-		if (rendered_track_.get())
+		if (rendered_track_.get()) 
+		{
 			rendered_track_->RemoveSink(this);
+		}
 
-		if (jpeg != nullptr)
-			tjDestroy(jpeg);
+		if (jpegDecompressor != nullptr) 
+		{
+			tjDestroy(jpegDecompressor);
+		}
 
 		delete[] bgr24;
 	}

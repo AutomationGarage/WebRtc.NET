@@ -1,25 +1,31 @@
+
 #include "defaults.h"
 #include "conductor.h"
 
-#include "webrtc/base/checks.h"
-#include "webrtc/api/test/fakeconstraints.h"
-#include "webrtc/api/video_codecs/video_encoder.h"
-#include "webrtc/modules/video_coding/codecs/vp8/simulcast_encoder_adapter.h"
-#include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
-#include "webrtc/modules/video_capture/video_capture_factory.h"
-#include "webrtc/media/engine/webrtcvideocapturerfactory.h"
+#include "rtc_base/checks.h"
+#include "api/test/fakeconstraints.h"
+#include "api/video_codecs/video_encoder.h"
+#include "modules/audio_device/include/audio_device_default.h"
+#include "modules/audio_processing/include/audio_processing.h"
+#include "api/audio_codecs/builtin_audio_decoder_factory.h"
+#include "api/audio_codecs/builtin_audio_encoder_factory.h"
+#include "api/video_codecs/builtin_video_decoder_factory.h"
+#include "api/video_codecs/builtin_video_encoder_factory.h"
+#include "modules/video_coding/codecs/vp8/include/vp8.h"
+#include "modules/video_capture/video_capture_factory.h"
+#include "media/engine/webrtcvideocapturerfactory.h"
 
 // for servers
-#include "webrtc/p2p/base/relayserver.h"
-#include "webrtc/p2p/base/stunserver.h"
-#include "webrtc/p2p/base/basicpacketsocketfactory.h"
-#include "webrtc/p2p/base/turnserver.h"
-#include "webrtc/base/asyncudpsocket.h"
-#include "webrtc/base/optionsfile.h"
-#include "webrtc/base/stringencode.h"
-#include "webrtc/base/thread.h"
+#include "p2p/base/relayserver.h"
+#include "p2p/base/stunserver.h"
+#include "p2p/base/basicpacketsocketfactory.h"
+#include "p2p/base/turnserver.h"
+#include "rtc_base/asyncudpsocket.h"
+#include "rtc_base/optionsfile.h"
+#include "rtc_base/stringencode.h"
+#include "rtc_base/thread.h"
 
-#include "turbojpeg/turbojpeg.h"
+#include "third_party/libjpeg_turbo/turbojpeg.h"
 #include "atlsafe.h"
 
 extern "C"
@@ -181,6 +187,28 @@ extern "C"
 		return cd->RunStunServer(bindIp);
 	}
 
+	__declspec(dllexport) uint8_t * WINAPI CaptureFrameBGRX(Native::Conductor * cd, int & w, int & h)
+	{
+		int wn = 0, hn = 0;
+		auto b = cd->CaptureFrameBGRX(wn, hn);
+		if (b != nullptr)
+		{
+			w = wn;
+			h = hn;
+		}
+		return b;
+	}
+
+	__declspec(dllexport) void WINAPI CaptureFrameAndPush(Native::Conductor * cd)
+	{
+		int wn = 0, hn = 0;
+		auto b = cd->CaptureFrameBGRX(wn, hn);
+		if (b != nullptr && wn == cd->width_ && hn == cd->height_)
+		{
+			cd->PushFrame(b, TJPF_BGRX);
+		}
+	}
+
 	// File is stored as lines of <username>=<HA1>.
 	// Generate HA1 via "echo -n "<username>:<realm>:<password>" | md5sum"
 	__declspec(dllexport) bool WINAPI RunTurnServer(Native::Conductor * cd, const char * bindIp, const char * ip, const char * realm, const char * authFile)
@@ -241,8 +269,8 @@ namespace Native
 		turnServer = nullptr;
 		data_channel = nullptr;
 		onDataMessage = nullptr;
-		capturer_internal = nullptr;
-		capturer = nullptr;
+		internal_capturer = nullptr;
+		external_capturer = nullptr;
 
 		jpegc = nullptr;
 	}
@@ -299,8 +327,8 @@ namespace Native
 		}
 		serverConfigs.clear();
 
-		capturer_internal = nullptr;
-		capturer = nullptr;
+		internal_capturer = nullptr;
+		external_capturer = nullptr;
 		pc_factory_ = nullptr;
 	}
 
@@ -309,7 +337,14 @@ namespace Native
 		RTC_DCHECK(pc_factory_ == nullptr);
 		RTC_DCHECK(peer_connection_ == nullptr);
 
-		pc_factory_ = webrtc::CreatePeerConnectionFactory();
+		pc_factory_ = webrtc::CreatePeerConnectionFactory(
+			nullptr /* network_thread */, nullptr /* worker_thread */,
+			nullptr /* signaling_thread */, nullptr /* default_adm */,
+			webrtc::CreateBuiltinAudioEncoderFactory(),
+			webrtc::CreateBuiltinAudioDecoderFactory(),
+			webrtc::CreateBuiltinVideoEncoderFactory(),
+			webrtc::CreateBuiltinVideoDecoderFactory(), nullptr /* audio_mixer */,
+			nullptr /* audio_processing */);
 
 		if (!pc_factory_)
 		{
@@ -342,7 +377,7 @@ namespace Native
 		webrtc::PeerConnectionInterface::RTCConfiguration config;
 		config.tcp_candidate_policy = webrtc::PeerConnectionInterface::kTcpCandidatePolicyDisabled;
 		config.disable_ipv6 = true;
-		config.enable_dtls_srtp = rtc::Optional<bool>(dtls);
+		config.enable_dtls_srtp = absl::optional<bool>(dtls);
 		config.rtcp_mux_policy = webrtc::PeerConnectionInterface::kRtcpMuxPolicyRequire;
 
 		for each (auto server in serverConfigs)
@@ -350,16 +385,7 @@ namespace Native
 			config.servers.push_back(server);
 		}
 
-		webrtc::FakeConstraints constraints;
-		constraints.SetAllowDtlsSctpDataChannels();
-		constraints.SetMandatoryReceiveVideo(false);
-		constraints.SetMandatoryReceiveAudio(false);
-		constraints.SetMandatoryIceRestart(true);
-		constraints.SetMandatoryUseRtpMux(true);
-		constraints.AddMandatory(webrtc::MediaConstraintsInterface::kVoiceActivityDetection, "false");
-		constraints.AddMandatory(webrtc::MediaConstraintsInterface::kEnableIPv6, "false");
-
-		peer_connection_ = pc_factory_->CreatePeerConnection(config, &constraints, NULL, NULL, this);
+		peer_connection_ = pc_factory_->CreatePeerConnection(config, nullptr, nullptr, this);
 		return peer_connection_ != nullptr;
 	}
 
@@ -378,7 +404,7 @@ namespace Native
 		if (!peer_connection_)
 			return;
 
-		peer_connection_->CreateOffer(this, nullptr);
+		peer_connection_->CreateOffer(this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 	}
 
 	void Conductor::OnOfferReply(const std::string & type, const std::string & sdp)
@@ -390,7 +416,7 @@ namespace Native
 		webrtc::SessionDescriptionInterface* session_description(webrtc::CreateSessionDescription(type, sdp, &error));
 		if (!session_description)
 		{
-			LOG(WARNING) << "Can't parse received session description message. " << "SdpParseError was: " << error.description;
+			RTC_LOG(WARNING) << "Can't parse received session description message. " << "SdpParseError was: " << error.description;
 			return;
 		}
 		peer_connection_->SetRemoteDescription(this, session_description);
@@ -405,7 +431,7 @@ namespace Native
 		webrtc::SessionDescriptionInterface* session_description(webrtc::CreateSessionDescription("offer", sdp, &error));
 		if (!session_description)
 		{
-			LOG(WARNING) << "Can't parse received session description message. " << "SdpParseError was: " << error.description;
+			RTC_LOG(WARNING) << "Can't parse received session description message. " << "SdpParseError was: " << error.description;
 			return;
 		}
 		peer_connection_->SetRemoteDescription(this, session_description);
@@ -425,8 +451,7 @@ namespace Native
 		webrtc::IceCandidateInterface * candidate = webrtc::CreateIceCandidate(sdp_mid, sdp_mlineindex, sdp, &error);
 		if (!candidate)
 		{
-			LOG(WARNING) << "Can't parse received candidate message. "
-				<< "SdpParseError was: " << error.description;
+			RTC_LOG(WARNING) << "Can't parse received candidate message. " << "SdpParseError was: " << error.description;
 			return false;
 		}
 
@@ -435,7 +460,7 @@ namespace Native
 
 		if (!peer_connection_->AddIceCandidate(candidate))
 		{
-			LOG(WARNING) << "Failed to apply the received candidate";
+			RTC_LOG(WARNING) << "Failed to apply the received candidate";
 			return false;
 		}
 		return true;
@@ -468,13 +493,13 @@ namespace Native
 
 	bool Conductor::OpenVideoCaptureDevice(const std::string & name)
 	{
-		if (!capturer_internal)
+		if (!internal_capturer)
 		{
 			cricket::WebRtcVideoDeviceCapturerFactory factory;
-			capturer_internal = factory.Create(cricket::Device(name, 0));
-			if (capturer_internal)
+			internal_capturer = factory.Create(cricket::Device(name, 0));
+			if (internal_capturer)
 			{
-				LOG(LS_ERROR) << "Capturer != NULL!";
+				RTC_LOG(LS_ERROR) << "Capturer != NULL!";
 				return true;
 			}
 		}
@@ -483,9 +508,9 @@ namespace Native
 
 	void Conductor::PushFrame(uint8_t * img, int pxFormat)
 	{
-		if (capturer)
+		if (external_capturer)
 		{
-			auto yuv = (uint8_t*)capturer->video_buffer->DataY();
+			auto yuv = (uint8_t*)external_capturer->video_buffer->DataY();
 			if (yuv != nullptr)
 			{
 				if (img != nullptr)
@@ -503,11 +528,11 @@ namespace Native
 
 					if (r == 0)
 					{
-						capturer->PushFrame();
+						external_capturer->PushFrame();
 					}
 					else
 					{
-						LOG(LS_ERROR) << tjGetErrorStr();
+						RTC_LOG(LS_ERROR) << tjGetErrorStr();
 					}
 				}
 			}
@@ -519,10 +544,7 @@ namespace Native
 		if (active_streams_.find(kStreamLabel) != active_streams_.end())
 			return;  // Already added.
 
-		auto v = pc_factory_->CreateVideoSource(capturer_internal ?
-												std::move(capturer_internal) :
-												std::unique_ptr<cricket::VideoCapturer>(
-													capturer = new Native::YuvFramesCapturer2(*this)));
+		auto v = pc_factory_->CreateVideoSource(internal_capturer ? std::move(internal_capturer) : std::unique_ptr<cricket::VideoCapturer>(external_capturer = new Native::YuvFramesCapturer(*this)));
 		auto video_track = pc_factory_->CreateVideoTrack(kVideoLabel, v);
 		if (onRenderLocal)
 		{
@@ -533,7 +555,7 @@ namespace Native
 		{
 			if (audioEnabled)
 			{
-				auto a = pc_factory_->CreateAudioSource(NULL);
+				auto a = pc_factory_->CreateAudioSource(cricket::AudioOptions());
 				auto audio_track = pc_factory_->CreateAudioTrack(kAudioLabel, a);
 				stream->AddTrack(audio_track);
 			}
@@ -541,17 +563,17 @@ namespace Native
 
 			if (!peer_connection_->AddStream(stream))
 			{
-				LOG(LS_ERROR) << "Adding stream to PeerConnection failed";
+				RTC_LOG(LS_ERROR) << "Adding stream to PeerConnection failed";
 			}
 			typedef std::pair<std::string, rtc::scoped_refptr<webrtc::MediaStreamInterface> >	MediaStreamPair;
-			active_streams_.insert(MediaStreamPair(stream->label(), stream));
+			active_streams_.insert(MediaStreamPair(stream->id(), stream));
 		}
 	}
 
 	// Called when a remote stream is added
 	void Conductor::OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream)
 	{
-		LOG(INFO) << __FUNCTION__ << " " << stream->label();
+		RTC_LOG(INFO) << __FUNCTION__ << " " << stream->id();
 
 		if (onRenderRemote)
 		{
@@ -576,23 +598,23 @@ namespace Native
 
 	void Conductor::OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream)
 	{
-		LOG(INFO) << __FUNCTION__ << " " << stream->label();
+		RTC_LOG(INFO) << __FUNCTION__ << " " << stream->id();
 		remote_video.reset(nullptr);
 		remote_audio.reset(nullptr);
 
 		// lost ownership, do not delete
-		capturer = nullptr;
-		capturer_internal = nullptr;
+		external_capturer = nullptr;
+		internal_capturer = nullptr;
 	}
 
 	void Conductor::OnIceCandidate(const webrtc::IceCandidateInterface* candidate)
 	{
-		LOG(INFO) << __FUNCTION__ << " " << candidate->sdp_mline_index();
+		RTC_LOG(INFO) << __FUNCTION__ << " " << candidate->sdp_mline_index();
 
 		std::string sdp;
 		if (!candidate->ToString(&sdp))
 		{
-			LOG(LS_ERROR) << "Failed to serialize candidate";
+			RTC_LOG(LS_ERROR) << "Failed to serialize candidate";
 			return;
 		}
 
@@ -620,7 +642,7 @@ namespace Native
 
 	void Conductor::OnFailure(const std::string & error)
 	{
-		LOG(LERROR) << error;
+		RTC_LOG(LERROR) << error;
 
 		if (onFailure != nullptr)
 		{
@@ -653,7 +675,7 @@ namespace Native
 
 	void Conductor::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> channel)
 	{
-		LOG(INFO) << __FUNCTION__ << " " << channel->label();
+		RTC_LOG(INFO) << __FUNCTION__ << " " << channel->label();
 
 		data_channel = channel.get();
 		data_channel->RegisterObserver(this);
@@ -672,7 +694,7 @@ namespace Native
 	//  A data buffer was successfully received.
 	void Conductor::OnMessage(const webrtc::DataBuffer& buffer)
 	{
-		LOG(INFO) << __FUNCTION__;
+		RTC_LOG(INFO) << __FUNCTION__;
 
 		if (buffer.binary)
 		{
@@ -697,7 +719,7 @@ namespace Native
 		rtc::SocketAddress server_addr;
 		if (!server_addr.FromString(bindIp))
 		{
-			LOG(LERROR) << "Unable to parse IP address: " << bindIp;
+			RTC_LOG(LERROR) << "Unable to parse IP address: ";
 			return false;
 		}
 
@@ -705,13 +727,13 @@ namespace Native
 		rtc::AsyncUDPSocket* server_socket = rtc::AsyncUDPSocket::Create(main->socketserver(), server_addr);
 		if (!server_socket)
 		{
-			LOG(LERROR) << "Failed to create a UDP socket" << std::endl;
+			RTC_LOG(LERROR) << "Failed to create a UDP socket";
 			return false;
 		}
 
 		stunServer.reset(new cricket::StunServer(server_socket));
 
-		LOG(INFO) << "Listening at " << server_addr.ToString() << std::endl;
+		RTC_LOG(INFO) << "Listening at " << server_addr.ToString();
 
 		return true;
 	}
@@ -722,14 +744,14 @@ namespace Native
 		rtc::SocketAddress int_addr;
 		if (!int_addr.FromString(bindIp))
 		{
-			LOG(LERROR) << "Unable to parse IP address: " << bindIp << std::endl;
+			RTC_LOG(LERROR) << "Unable to parse IP address: " << bindIp;
 			return false;
 		}
 
 		rtc::IPAddress ext_addr;
 		if (!IPFromString(ip, &ext_addr))
 		{
-			LOG(LERROR) << "Unable to parse IP address: " << ip << std::endl;
+			RTC_LOG(LERROR) << "Unable to parse IP address: " << ip;
 			return false;
 		}
 
@@ -737,14 +759,14 @@ namespace Native
 		rtc::AsyncUDPSocket * int_socket = rtc::AsyncUDPSocket::Create(main->socketserver(), int_addr);
 		if (!int_socket)
 		{
-			LOG(LERROR) << "Failed to create a UDP socket bound at" << int_addr.ToString() << std::endl;
+			RTC_LOG(LERROR) << "Failed to create a UDP socket bound at" << int_addr.ToString();
 			return false;
 		}
 
 		TurnFileAuth * auth = new TurnFileAuth(authFile);
 		if (!auth->Load())
 		{
-			LOG(LERROR) << "Failed to load auth file " << authFile << std::endl;
+			RTC_LOG(LERROR) << "Failed to load auth file " << authFile;
 			return false;
 		}
 
@@ -759,7 +781,7 @@ namespace Native
 		t->SetExternalSocketFactory(new rtc::BasicPacketSocketFactory(),
 											 rtc::SocketAddress(ext_addr, 0));
 
-		LOG(INFO) << "Listening internally at " << int_addr.ToString() << std::endl;
+		RTC_LOG(INFO) << "Listening internally at " << int_addr.ToString();
 
 		return true;
 	}
