@@ -15,3 +15,5 @@ obj
 /WebRtcNative/Release_x64
 /WebRtcNative/Debug
 /WebRtcNative/Debug_x64
+/WebRtcNative/lib
+/WebRtcNative/lib_x64
