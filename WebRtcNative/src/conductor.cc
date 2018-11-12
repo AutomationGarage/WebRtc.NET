@@ -339,7 +339,7 @@ namespace Native
 
 		pc_factory_ = webrtc::CreatePeerConnectionFactory(
 			nullptr /* network_thread */, nullptr /* worker_thread */,
-			nullptr /* signaling_thread */, nullptr /* default_adm */,
+			nullptr /* signaling_thread */, audioEnabled ? nullptr : webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::AudioLayer::kDummyAudio),
 			webrtc::CreateBuiltinAudioEncoderFactory(),
 			webrtc::CreateBuiltinAudioDecoderFactory(),
 			webrtc::CreateBuiltinVideoEncoderFactory(),
