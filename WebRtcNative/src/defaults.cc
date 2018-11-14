@@ -52,10 +52,12 @@ namespace Native
 		desktop_capturer = webrtc::DesktopCapturer::CreateScreenCapturer(co);
 
 		desktop_capturer->GetSourceList(&desktop_screens);
-		for each(auto & s in desktop_screens)
+
+		for (size_t i = 0; i < desktop_screens.size(); i++)
 		{
-			RTC_LOG(INFO) << "screen: " << s.id << " -> " << s.title;
+			RTC_LOG(INFO) << "screen: " << desktop_screens[i].id << " -> " << desktop_screens[i].title;
 		}
+
 		desktop_capturer->SelectSource(desktop_screens[0].id);
 		desktop_capturer->Start(this);
 

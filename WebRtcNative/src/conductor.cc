@@ -380,9 +380,10 @@ namespace Native
 		config.enable_dtls_srtp = absl::optional<bool>(dtls);
 		config.rtcp_mux_policy = webrtc::PeerConnectionInterface::kRtcpMuxPolicyRequire;
 
-		for each (auto server in serverConfigs)
+
+		for (size_t i = 0; i < serverConfigs.size(); i++)
 		{
-			config.servers.push_back(server);
+			config.servers.push_back(serverConfigs[i]);
 		}
 
 		peer_connection_ = pc_factory_->CreatePeerConnection(config, nullptr, nullptr, this);
