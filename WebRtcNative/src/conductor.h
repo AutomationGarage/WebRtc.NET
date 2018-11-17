@@ -45,7 +45,7 @@ namespace Native
 			return rtc::Thread::Current()->ProcessMessages(delay);
 		}
 
-		inline void PushFrame(uint8_t * img, int pxFormat);
+		inline void PushFrame(uint8_t * img);
 
 		static std::vector<std::string> GetVideoDevices();
 		bool OpenVideoCaptureDevice(const std::string & name);
@@ -187,9 +187,8 @@ namespace Native
 		std::unique_ptr<cricket::TurnServer> turnServer;
 		std::unique_ptr<cricket::StunServer> stunServer;
 
-		void * jpegc;
-
 	public:
+
 		int caputureFps;
 		bool audioEnabled;
 

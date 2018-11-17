@@ -3,15 +3,11 @@
 #include "conductor.h"
 
 #include "rtc_base/checks.h"
-#include "api/test/fakeconstraints.h"
-#include "api/video_codecs/video_encoder.h"
-#include "modules/audio_device/include/audio_device_default.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
-#include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_capture/video_capture_factory.h"
 #include "media/engine/webrtcvideocapturerfactory.h"
 
@@ -25,7 +21,7 @@
 #include "rtc_base/stringencode.h"
 #include "rtc_base/thread.h"
 
-#include "third_party/libjpeg_turbo/turbojpeg.h"
+#include "third_party/libyuv/include/libyuv/convert.h"
 #include "atlsafe.h"
 
 extern "C"
@@ -177,9 +173,9 @@ extern "C"
 		cd->caputureFps = caputureFps;
 	}
 
-	__declspec(dllexport) void WINAPI PushFrame(Native::Conductor * cd, uint8_t * img, int type)
+	__declspec(dllexport) void WINAPI PushFrame(Native::Conductor * cd, uint8_t * img)
 	{
-		cd->PushFrame(img, type); // default: TJPF_BGR
+		cd->PushFrame(img);
 	}
 
 	__declspec(dllexport) bool WINAPI RunStunServer(Native::Conductor * cd, const char * bindIp)
@@ -205,7 +201,7 @@ extern "C"
 		auto b = cd->CaptureFrameBGRX(wn, hn);
 		if (b != nullptr && wn == cd->width_ && hn == cd->height_)
 		{
-			cd->PushFrame(b, TJPF_BGRX);
+			cd->PushFrame(b);
 		}
 	}
 
@@ -269,17 +265,13 @@ namespace Native
 		turnServer = nullptr;
 		data_channel = nullptr;
 		onDataMessage = nullptr;
+
 		internal_capturer = nullptr;
 		external_capturer = nullptr;
-
-		jpegc = nullptr;
 	}
 
 	Conductor::~Conductor()
 	{
-		if (jpegc != nullptr)
-			tjDestroy(jpegc);
-
 		DeletePeerConnection();
 		RTC_DCHECK(peer_connection_ == nullptr);
 
@@ -507,34 +499,22 @@ namespace Native
 		return false;
 	}
 
-	void Conductor::PushFrame(uint8_t * img, int pxFormat)
+	void Conductor::PushFrame(uint8_t * img)
 	{
 		if (external_capturer)
 		{
-			auto yuv = (uint8_t*)external_capturer->video_buffer->DataY();
-			if (yuv != nullptr)
+			if (img != nullptr)
 			{
-				if (img != nullptr)
+				int r = 0;
+
+				r = libyuv::RGB24ToI420(img, width_ * 3,
+					external_capturer->video_buffer->MutableDataY(), external_capturer->video_buffer->StrideY(),
+					external_capturer->video_buffer->MutableDataU(), external_capturer->video_buffer->StrideU(),
+					external_capturer->video_buffer->MutableDataV(), external_capturer->video_buffer->StrideV(), width_, height_);
+				
+				if (r == 0) 
 				{
-					const int pad = 4;
-					int pitch = TJPAD(tjPixelSize[pxFormat] * width_);
-
-					if (jpegc == nullptr)
-						jpegc = tjInitCompress();
-
-					int r = 0;
-
-					if (jpegc)
-						r = tjEncodeYUV3(jpegc, img, width_, pitch, height_, pxFormat, yuv, pad, TJSAMP_420, true ? TJFLAG_FASTDCT : TJFLAG_ACCURATEDCT);
-
-					if (r == 0)
-					{
-						external_capturer->PushFrame();
-					}
-					else
-					{
-						RTC_LOG(LS_ERROR) << tjGetErrorStr();
-					}
+					external_capturer->PushFrame();
 				}
 			}
 		}

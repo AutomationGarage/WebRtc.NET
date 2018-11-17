@@ -1,7 +1,7 @@
 #include "defaults.h"
 #include "conductor.h"
 
-#include "third_party/libjpeg_turbo/turbojpeg.h"
+#include "third_party/libyuv/include/libyuv/convert.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
 
@@ -139,7 +139,7 @@ namespace Native
 			int height = b->height();
 
 			auto b420 = b->ToI420();
-			if (0 == DecodeYUV(b420->DataY(), width, height))
+			if (0 == DecodeYUV(b420, width, height))
 			{
 				con->onRenderRemote(bgr24, width, height);
 			}
@@ -151,27 +151,21 @@ namespace Native
 			int height = b->height();
 
 			auto b420 = b->ToI420();
-			if (0 == DecodeYUV(b420->DataY(), width, height))
+			if (0 == DecodeYUV(b420, width, height))
 			{
 				con->onRenderLocal(bgr24, width, height);
 			}
 		}
 	}
 
-	inline int VideoRenderer::DecodeYUV(const uint8_t * yuv, int & width, int & height)
+	inline int VideoRenderer::DecodeYUV(rtc::scoped_refptr<webrtc::I420BufferInterface> b420, int & width, int & height)
 	{
-		if (jpegDecompressor == nullptr) 
-		{
-			jpegDecompressor = tjInitDecompress();
-		}
-
-		const int pad = 4;
-		int pitch = TJPAD(tjPixelSize[TJPF_BGR] * width);
-
-		if (bgr24 == nullptr)
-			bgr24 = new uint8_t[pitch * height];
-
-		return tjDecodeYUV(jpegDecompressor, yuv, pad, TJSAMP_420, bgr24, width, pitch, height, TJPF_BGR, true ? TJFLAG_FASTDCT : TJFLAG_ACCURATEDCT);
+		if (bgr24 == nullptr)  { bgr24 = new uint8_t[3 * width * height]; }
+		
+		return libyuv::I420ToRGB24(b420->DataY(), b420->StrideY(),
+								   b420->DataU(), b420->StrideU(), 
+								   b420->DataV(), b420->StrideV(), 
+								   bgr24,  width * 3, width, height);
 	}
 
 	VideoRenderer::~VideoRenderer()
@@ -179,11 +173,6 @@ namespace Native
 		if (rendered_track_.get()) 
 		{
 			rendered_track_->RemoveSink(this);
-		}
-
-		if (jpegDecompressor != nullptr) 
-		{
-			tjDestroy(jpegDecompressor);
 		}
 
 		delete[] bgr24;

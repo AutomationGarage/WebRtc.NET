@@ -61,7 +61,7 @@ namespace Native
 		void OnFrame(const webrtc::VideoFrame & frame) override;
 
 	protected:
-		int DecodeYUV(const uint8_t * yuv, int & width, int & height);
+		int DecodeYUV(rtc::scoped_refptr<webrtc::I420BufferInterface> b420, int & width, int & height);
 
 		void * jpegDecompressor;
 		uint8_t * bgr24;
