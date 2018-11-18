@@ -3,33 +3,19 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.IO;
-using WebRtc.NET.Properties;
 
 namespace WebRtc.NET
 {
     public class WebRtcNative : IDisposable
     {
         const string dll = "WebRtcNative";
-        const string version = "v2017.05.02-beta";
 
         static WebRtcNative()
         {
-            var dir = Path.Combine(Path.Combine(Path.GetTempPath(), IntPtr.Size == 8 ? "x64" : "x86"), version);
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
+            var dir = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), IntPtr.Size == 8 ? "x64" : "x86");
+            var file =  Path.Combine(dir, dll) + ".dll";
 
-            var file = Path.Combine(dir, dll) + ".dll";
-            if (!File.Exists(file))
-            {
-                File.WriteAllBytes(file, IntPtr.Size == 8 ? Resources.WebRtcNative_x64 : Resources.WebRtcNative_x86);
-            }
-
-            if (IntPtr.Zero == LoadLibrary(file))
-            {
-                throw new Exception("Failed to load: " + file);
-            }
+            if (IntPtr.Zero == LoadLibrary(file)) { throw new Exception("Failed to load: " + file); }
         }
 
         #region -- Constructs --

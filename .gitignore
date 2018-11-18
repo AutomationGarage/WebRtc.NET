@@ -16,3 +16,6 @@ obj
 /WebRtcNative/lib_x64
 /WebRtcNative/libd
 /WebRtcNative/libd_x64
+
+/WebRtc.NET/x64/WebRtcNative.dll
+/WebRtc.NET/x86/WebRtcNative.dll
