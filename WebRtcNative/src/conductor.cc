@@ -23,6 +23,7 @@
 
 #include "third_party/libyuv/include/libyuv/convert.h"
 #include "atlsafe.h"
+#include "rtc_base/ssladapter.h"
 
 extern "C"
 {
@@ -38,12 +39,12 @@ extern "C"
 
 	__declspec(dllexport) void WINAPI InitializeSSL()
 	{
-		Native::InitializeSSL();
+		rtc::InitializeSSL();
 	}
 
 	__declspec(dllexport) void WINAPI CleanupSSL()
 	{
-		Native::CleanupSSL();
+		rtc::CleanupSSL();
 	}
 
 	//------------------------------------------------

@@ -7,16 +7,9 @@
 
 namespace Native
 {
-	int I420DataSize(int height, int stride_y, int stride_u, int stride_v)
-	{
-		return stride_y * height + (stride_u + stride_v) * ((height + 1) / 2);
-	}
-
 	YuvFramesCapturer::YuvFramesCapturer(Conductor & c) : run(false), con(&c), desktop_capturer(nullptr)
 	{
 		video_buffer = webrtc::I420Buffer::Create(con->width_, con->height_);
-		frame_data_size_ = I420DataSize(con->height_, video_buffer->StrideY(), video_buffer->StrideU(), video_buffer->StrideV());
-
 		video_frame = new webrtc::VideoFrame(video_buffer, 0, 0, webrtc::VideoRotation::kVideoRotation_0);
 
 		// Enumerate the supported formats. We have only one supported format.

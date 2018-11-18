@@ -34,7 +34,6 @@ namespace Native
 		webrtc::DesktopCapturer::SourceList desktop_screens;
 
 		rtc::scoped_refptr<webrtc::I420Buffer> video_buffer;
-		uint32_t frame_data_size_;
 
 	protected:
 		virtual bool GetPreferredFourccs(std::vector<uint32_t>* fourccs);
@@ -63,7 +62,6 @@ namespace Native
 	protected:
 		int DecodeYUV(rtc::scoped_refptr<webrtc::I420BufferInterface> b420, int & width, int & height);
 
-		void * jpegDecompressor;
 		uint8_t * bgr24;
 		bool remote;
 		Conductor * con;

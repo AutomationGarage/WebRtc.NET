@@ -1,15 +1,11 @@
+#pragma comment(lib,"secur32.lib")
+#pragma comment(lib,"winmm.lib")
+#pragma comment(lib,"dmoguids.lib")
+#pragma comment(lib,"wmcodecdspuuid.lib")
+#pragma comment(lib,"msdmo.lib")
+#pragma comment(lib,"Strmiids.lib")
 
-#pragma once
+#pragma comment(lib,"dxgi.lib")
+#pragma comment(lib,"d3d11.lib")
 
-#ifndef WEBRTC_NET_INTERNALS_H_
-#define WEBRTC_NET_INTERNALS_H_
-
-namespace Native
-{
-	extern bool CFG_quality_scaler_enabled_;
-
-	void InitializeSSL();
-	void CleanupSSL();
-}
-
-#endif // WEBRTC_NET_INTERNALS_H_
+#pragma comment(lib,"webrtc.lib")

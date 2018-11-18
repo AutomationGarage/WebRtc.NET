@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="src\conductor.cc" />
     <ClCompile Include="src\defaults.cc" />
-    <ClCompile Include="src\main.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="internals.h" />
