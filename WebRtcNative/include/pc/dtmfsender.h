@@ -15,14 +15,14 @@
 
 #include "api/dtmfsenderinterface.h"
 #include "api/proxy.h"
-#include "rtc_base/asyncinvoker.h"
 #include "rtc_base/constructormagic.h"
+#include "rtc_base/messagehandler.h"
 #include "rtc_base/refcount.h"
 #include "rtc_base/thread.h"
 
 // DtmfSender is the native implementation of the RTCDTMFSender defined by
 // the WebRTC W3C Editor's Draft.
-// https://w3c.github.io/webrtc-pc/#rtcdtmfsender
+// http://dev.w3.org/2011/webrtc/editor/webrtc.html
 
 namespace webrtc {
 
@@ -45,7 +45,9 @@ class DtmfProviderInterface {
   virtual ~DtmfProviderInterface() {}
 };
 
-class DtmfSender : public DtmfSenderInterface, public sigslot::has_slots<> {
+class DtmfSender : public DtmfSenderInterface,
+                   public sigslot::has_slots<>,
+                   public rtc::MessageHandler {
  public:
   static rtc::scoped_refptr<DtmfSender> Create(rtc::Thread* signaling_thread,
                                                DtmfProviderInterface* provider);
@@ -68,7 +70,8 @@ class DtmfSender : public DtmfSenderInterface, public sigslot::has_slots<> {
  private:
   DtmfSender();
 
-  void QueueInsertDtmf(const rtc::Location& posted_from, uint32_t delay_ms);
+  // Implements MessageHandler.
+  void OnMessage(rtc::Message* msg) override;
 
   // The DTMF sending task.
   void DoInsertDtmf();
@@ -83,9 +86,6 @@ class DtmfSender : public DtmfSenderInterface, public sigslot::has_slots<> {
   std::string tones_;
   int duration_;
   int inter_tone_gap_;
-  // Invoker for running delayed tasks which feed the DTMF provider one tone at
-  // a time.
-  rtc::AsyncInvoker dtmf_driver_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(DtmfSender);
 };

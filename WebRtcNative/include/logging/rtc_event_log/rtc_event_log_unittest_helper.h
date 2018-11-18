@@ -70,8 +70,7 @@ class EventGenerator {
 
   std::unique_ptr<RtcEventRtcpPacketOutgoing> NewRtcpPacketOutgoing();
 
-  void RandomizeRtpPacket(size_t payload_size,
-                          size_t padding_size,
+  void RandomizeRtpPacket(size_t packet_size,
                           uint32_t ssrc,
                           const RtpHeaderExtensionMap& extension_map,
                           RtpPacket* rtp_packet);

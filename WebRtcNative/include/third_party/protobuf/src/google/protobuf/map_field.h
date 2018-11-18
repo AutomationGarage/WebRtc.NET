@@ -31,8 +31,7 @@
 #ifndef GOOGLE_PROTOBUF_MAP_FIELD_H__
 #define GOOGLE_PROTOBUF_MAP_FIELD_H__
 
-#include <atomic>
-
+#include <google/protobuf/stubs/atomicops.h>
 #include <google/protobuf/stubs/mutex.h>
 #include <google/protobuf/stubs/common.h>
 #include <google/protobuf/generated_message_reflection.h>
@@ -87,8 +86,6 @@ class LIBPROTOBUF_EXPORT MapFieldBase {
   virtual bool ContainsMapKey(const MapKey& map_key) const = 0;
   virtual bool InsertOrLookupMapValue(
       const MapKey& map_key, MapValueRef* val) = 0;
-  // Returns whether changes to the map are reflected in the repeated field.
-  bool IsRepeatedFieldValid() const;
   // Insures operations after won't get executed before calling this.
   bool IsMapValid() const;
   virtual bool DeleteMapValue(const MapKey& map_key) = 0;
@@ -143,7 +140,9 @@ class LIBPROTOBUF_EXPORT MapFieldBase {
 
   mutable Mutex mutex_;  // The thread to synchronize map and repeated field
                          // needs to get lock first;
-  mutable std::atomic<State> state_;
+  mutable volatile Atomic32 state_;  // 0: STATE_MODIFIED_MAP
+                                     // 1: STATE_MODIFIED_REPEATED
+                                     // 2: CLEAN
 
  private:
   friend class ContendedMapCleanTest;
@@ -171,7 +170,6 @@ class LIBPROTOBUF_EXPORT MapFieldBase {
   // IncreaseIterator() is called by operator++() of MapIterator only.
   // It implements the ++ operator of MapIterator.
   virtual void IncreaseIterator(MapIterator* map_iter) const = 0;
-  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(MapFieldBase);
 };
 
 // This class provides common Map Reflection implementations for generated
@@ -201,7 +199,6 @@ class TypeDefinedMapFieldBase : public MapFieldBase {
   void IncreaseIterator(MapIterator* map_iter) const;
 
   virtual void SetMapIteratorValue(MapIterator* map_iter) const = 0;
-  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(TypeDefinedMapFieldBase);
 };
 
 // This class provides access to map field using generated api. It is used for
@@ -218,9 +215,8 @@ class MapField : public TypeDefinedMapFieldBase<Key, T> {
 
   // Define message type for internal repeated field.
   typedef Derived EntryType;
-  typedef MapEntryLite<Derived, Key, T, kKeyFieldType, kValueFieldType,
-                       default_enum_value>
-      EntryLiteType;
+  typedef MapEntryLite<Key, T, kKeyFieldType, kValueFieldType,
+                       default_enum_value> EntryLiteType;
 
   // Define abbreviation for parent MapFieldLite
   typedef MapFieldLite<Derived, Key, T, kKeyFieldType, kValueFieldType,
@@ -235,9 +231,6 @@ class MapField : public TypeDefinedMapFieldBase<Key, T> {
   typedef typename MapIf<kIsValueEnum, T, const T&>::type CastValueType;
 
  public:
-  typedef typename Derived::SuperType EntryTypeTrait;
-  typedef Map<Key, T> MapType;
-
   MapField() {}
   explicit MapField(Arena* arena)
       : TypeDefinedMapFieldBase<Key, T>(arena), impl_(arena) {}
@@ -294,17 +287,6 @@ class MapField : public TypeDefinedMapFieldBase<Key, T> {
 
   friend class ::google::protobuf::Arena;
   friend class MapFieldStateTest;  // For testing, it needs raw access to impl_
-  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(MapField);
-};
-
-template <typename T, typename Key, typename Value,
-          WireFormatLite::FieldType kKeyFieldType,
-          WireFormatLite::FieldType kValueFieldType, int default_enum_value>
-struct MapEntryToMapField<MapEntry<T, Key, Value, kKeyFieldType,
-                                   kValueFieldType, default_enum_value> > {
-  typedef MapField<T, Key, Value, kKeyFieldType, kValueFieldType,
-                   default_enum_value>
-      MapFieldType;
 };
 
 class LIBPROTOBUF_EXPORT DynamicMapField: public TypeDefinedMapFieldBase<MapKey, MapValueRef> {
@@ -332,7 +314,6 @@ class LIBPROTOBUF_EXPORT DynamicMapField: public TypeDefinedMapFieldBase<MapKey,
   void SyncMapWithRepeatedFieldNoLock() const;
   size_t SpaceUsedExcludingSelfNoLock() const;
   void SetMapIteratorValue(MapIterator* map_iter) const;
-  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(DynamicMapField);
 };
 
 }  // namespace internal
@@ -356,10 +337,6 @@ class LIBPROTOBUF_EXPORT MapKey {
   }
   MapKey(const MapKey& other) : type_(0) {
     CopyFrom(other);
-  }
-  MapKey& operator=(const MapKey& other) {
-    CopyFrom(other);
-    return *this;
   }
 
   ~MapKey() {
@@ -720,7 +697,6 @@ class LIBPROTOBUF_EXPORT MapValueRef {
   void* data_;
   // type_ is 0 or a valid FieldDescriptor::CppType.
   int type_;
-  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(MapValueRef);
 };
 
 #undef TYPE_CHECK
@@ -741,11 +717,6 @@ class LIBPROTOBUF_EXPORT MapIterator {
   }
   ~MapIterator() {
     map_->DeleteIterator(this);
-  }
-  MapIterator& operator=(const MapIterator& other) {
-    map_ = other.map_;
-    map_->CopyIterator(this, other);
-    return *this;
   }
   friend bool operator==(const MapIterator& a, const MapIterator& b) {
     return a.map_->EqualIterator(a, b);
@@ -815,13 +786,13 @@ struct hash<google::protobuf::MapKey> {
       case google::protobuf::FieldDescriptor::CPPTYPE_STRING:
         return hash<string>()(map_key.GetStringValue());
       case google::protobuf::FieldDescriptor::CPPTYPE_INT64:
-        return hash<::google::protobuf::int64>()(map_key.GetInt64Value());
+        return hash< ::google::protobuf::int64>()(map_key.GetInt64Value());
       case google::protobuf::FieldDescriptor::CPPTYPE_INT32:
-        return hash<::google::protobuf::int32>()(map_key.GetInt32Value());
+        return hash< ::google::protobuf::int32>()(map_key.GetInt32Value());
       case google::protobuf::FieldDescriptor::CPPTYPE_UINT64:
-        return hash<::google::protobuf::uint64>()(map_key.GetUInt64Value());
+        return hash< ::google::protobuf::uint64>()(map_key.GetUInt64Value());
       case google::protobuf::FieldDescriptor::CPPTYPE_UINT32:
-        return hash<::google::protobuf::uint32>()(map_key.GetUInt32Value());
+        return hash< ::google::protobuf::uint32>()(map_key.GetUInt32Value());
       case google::protobuf::FieldDescriptor::CPPTYPE_BOOL:
         return hash<bool>()(map_key.GetBoolValue());
     }

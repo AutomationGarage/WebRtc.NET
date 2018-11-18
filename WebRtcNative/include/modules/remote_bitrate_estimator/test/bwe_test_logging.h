@@ -346,6 +346,7 @@ class Logging {
                  bool enabled);
   void PopState();
 
+  static Logging g_Logging;
   rtc::CriticalSection crit_sect_;
   ThreadMap thread_map_;
 

@@ -17,7 +17,6 @@
 
 #include <stdint.h>
 #include <cmath>
-#include <cstdlib>
 #include <limits>
 #include <string>
 
@@ -189,35 +188,17 @@ class TimeDelta {
     return microseconds_ == timedelta_impl::kMinusInfinityVal;
   }
   TimeDelta operator+(const TimeDelta& other) const {
-    if (IsPlusInfinity() || other.IsPlusInfinity()) {
-      RTC_DCHECK(!IsMinusInfinity());
-      RTC_DCHECK(!other.IsMinusInfinity());
-      return PlusInfinity();
-    } else if (IsMinusInfinity() || other.IsMinusInfinity()) {
-      RTC_DCHECK(!IsPlusInfinity());
-      RTC_DCHECK(!other.IsPlusInfinity());
-      return MinusInfinity();
-    }
     return TimeDelta::us(us() + other.us());
   }
   TimeDelta operator-(const TimeDelta& other) const {
-    if (IsPlusInfinity() || other.IsMinusInfinity()) {
-      RTC_DCHECK(!IsMinusInfinity());
-      RTC_DCHECK(!other.IsPlusInfinity());
-      return PlusInfinity();
-    } else if (IsMinusInfinity() || other.IsPlusInfinity()) {
-      RTC_DCHECK(!IsPlusInfinity());
-      RTC_DCHECK(!other.IsMinusInfinity());
-      return MinusInfinity();
-    }
     return TimeDelta::us(us() - other.us());
   }
   TimeDelta& operator-=(const TimeDelta& other) {
-    *this = *this - other;
+    microseconds_ -= other.us();
     return *this;
   }
   TimeDelta& operator+=(const TimeDelta& other) {
-    *this = *this + other;
+    microseconds_ += other.us();
     return *this;
   }
   constexpr double operator/(const TimeDelta& other) const {

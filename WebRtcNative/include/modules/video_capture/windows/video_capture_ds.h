@@ -33,8 +33,8 @@ class VideoCaptureDS : public VideoCaptureImpl {
    *   Start/Stop
    *
    *************************************************************************/
-  int32_t StartCapture(const VideoCaptureCapability& capability) override;
-  int32_t StopCapture() override;
+  virtual int32_t StartCapture(const VideoCaptureCapability& capability);
+  virtual int32_t StopCapture();
 
   /**************************************************************************
    *
@@ -42,11 +42,11 @@ class VideoCaptureDS : public VideoCaptureImpl {
    *
    **************************************************************************/
 
-  bool CaptureStarted() override;
-  int32_t CaptureSettings(VideoCaptureCapability& settings) override;
+  virtual bool CaptureStarted();
+  virtual int32_t CaptureSettings(VideoCaptureCapability& settings);
 
  protected:
-  ~VideoCaptureDS() override;
+  virtual ~VideoCaptureDS();
 
   // Help functions
 

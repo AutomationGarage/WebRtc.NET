@@ -28,6 +28,7 @@ class RTPFragmentationHeader;  // forward declaration
 // with a copy-constructor. See below.
 struct CodecSpecificInfoVP8 {
   bool nonReference;
+  uint8_t simulcastIdx;
   uint8_t temporalIdx;
   bool layerSync;
   int8_t keyIdx;  // Negative value to skip keyIdx.
@@ -42,6 +43,7 @@ struct CodecSpecificInfoVP9 {
   bool non_ref_for_inter_layer_pred;
 
   uint8_t temporal_idx;
+  uint8_t spatial_idx;
   bool temporal_up_switch;
   bool inter_layer_predicted;  // Frame is dependent on directly lower spatial
                                // layer frame.
@@ -61,11 +63,17 @@ struct CodecSpecificInfoVP9 {
   bool end_of_picture;
 };
 
+struct CodecSpecificInfoGeneric {
+  uint8_t simulcast_idx;
+};
+
 struct CodecSpecificInfoH264 {
   H264PacketizationMode packetization_mode;
+  uint8_t simulcast_idx;
 };
 
 union CodecSpecificInfoUnion {
+  CodecSpecificInfoGeneric generic;
   CodecSpecificInfoVP8 VP8;
   CodecSpecificInfoVP9 VP9;
   CodecSpecificInfoH264 H264;

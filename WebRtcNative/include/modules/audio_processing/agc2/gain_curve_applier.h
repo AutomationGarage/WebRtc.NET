@@ -42,8 +42,6 @@ class GainCurveApplier {
   // Resets the internal state.
   void Reset();
 
-  float LastAudioLevel() const;
-
  private:
   const InterpolatedGainCurve interp_gain_curve_;
   FixedDigitalLevelEstimator level_estimator_;

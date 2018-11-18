@@ -19,6 +19,7 @@
 #include "absl/types/optional.h"
 #include "call/video_receive_stream.h"
 #include "common_types.h"  // NOLINT(build/include)
+#include "common_video/include/frame_callback.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "rtc_base/criticalsection.h"
 #include "rtc_base/numerics/histogram_percentile_counter.h"
@@ -47,7 +48,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
  public:
   ReceiveStatisticsProxy(const VideoReceiveStream::Config* config,
                          Clock* clock);
-  ~ReceiveStatisticsProxy() override;
+  virtual ~ReceiveStatisticsProxy();
 
   VideoReceiveStream::Stats GetStats() const;
 
@@ -61,7 +62,8 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   void OnDecoderImplementationName(const char* implementation_name);
   void OnIncomingRate(unsigned int framerate, unsigned int bitrate_bps);
 
-  void OnPreDecode(VideoCodecType codec_type, int qp);
+  void OnPreDecode(const EncodedImage& encoded_image,
+                   const CodecSpecificInfo* codec_specific_info);
 
   void OnUniqueFramesCounted(int num_unique_frames);
 
@@ -113,7 +115,6 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
 
   struct ContentSpecificStats {
     ContentSpecificStats();
-    ~ContentSpecificStats();
 
     void Add(const ContentSpecificStats& other);
 

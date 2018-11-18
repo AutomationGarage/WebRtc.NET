@@ -40,6 +40,7 @@ RTC_NORETURN void rtc_FatalMessage(const char* file, int line, const char* msg);
 #ifdef __cplusplus
 // C++ version.
 
+#include <sstream>  // no-presubmit-check TODO(webrtc:8982)
 #include <string>
 
 #include "rtc_base/numerics/safe_compare.h"

@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VPX_TEST_REGISTER_STATE_CHECK_H_
-#define VPX_TEST_REGISTER_STATE_CHECK_H_
+#ifndef TEST_REGISTER_STATE_CHECK_H_
+#define TEST_REGISTER_STATE_CHECK_H_
 
 #include "third_party/googletest/src/include/gtest/gtest.h"
 #include "./vpx_config.h"
@@ -184,4 +184,4 @@ class RegisterStateCheckMMX {
 #define API_REGISTER_STATE_CHECK ASM_REGISTER_STATE_CHECK
 #endif
 
-#endif  // VPX_TEST_REGISTER_STATE_CHECK_H_
+#endif  // TEST_REGISTER_STATE_CHECK_H_

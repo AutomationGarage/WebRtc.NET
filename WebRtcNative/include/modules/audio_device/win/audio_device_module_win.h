@@ -42,9 +42,6 @@ class AudioInput {
   virtual int StopRecording() = 0;
   virtual bool Recording() = 0;
   virtual int VolumeIsAvailable(bool* available) = 0;
-  virtual int RestartRecording() = 0;
-  virtual bool Restarting() const = 0;
-  virtual int SetSampleRate(uint32_t sample_rate) = 0;
 };
 
 // This interface represents the main output-related parts of the complete
@@ -66,14 +63,11 @@ class AudioOutput {
   virtual int StopPlayout() = 0;
   virtual bool Playing() = 0;
   virtual int VolumeIsAvailable(bool* available) = 0;
-  virtual int RestartPlayout() = 0;
-  virtual bool Restarting() const = 0;
-  virtual int SetSampleRate(uint32_t sample_rate) = 0;
 };
 
 // Combines an AudioInput and an AudioOutput implementation to build an
 // AudioDeviceModule. Hides most parts of the full ADM interface.
-rtc::scoped_refptr<AudioDeviceModuleForTest>
+rtc::scoped_refptr<AudioDeviceModule>
 CreateWindowsCoreAudioAudioDeviceModuleFromInputAndOutput(
     std::unique_ptr<AudioInput> audio_input,
     std::unique_ptr<AudioOutput> audio_output);

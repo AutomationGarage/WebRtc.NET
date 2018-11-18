@@ -105,24 +105,7 @@ template <class To, template <class...> class Op, class... Args>
 struct is_detected_convertible
     : is_detected_convertible_impl<void, To, Op, Args...>::type {};
 
-template <typename T>
-using IsCopyAssignableImpl =
-    decltype(std::declval<T&>() = std::declval<const T&>());
-
-template <typename T>
-using IsMoveAssignableImpl = decltype(std::declval<T&>() = std::declval<T&&>());
-
 }  // namespace type_traits_internal
-
-template <typename T>
-struct is_copy_assignable : type_traits_internal::is_detected<
-                                type_traits_internal::IsCopyAssignableImpl, T> {
-};
-
-template <typename T>
-struct is_move_assignable : type_traits_internal::is_detected<
-                                type_traits_internal::IsMoveAssignableImpl, T> {
-};
 
 // void_t()
 //
@@ -326,7 +309,7 @@ template <typename T>
 struct is_trivially_copy_assignable
     : std::integral_constant<
           bool, __has_trivial_assign(typename std::remove_reference<T>::type) &&
-                    absl::is_copy_assignable<T>::value> {
+                    std::is_copy_assignable<T>::value> {
 #ifdef ABSL_HAVE_STD_IS_TRIVIALLY_ASSIGNABLE
  private:
   static constexpr bool compliant =
@@ -426,11 +409,11 @@ struct IsHashEnabled
     : absl::conjunction<std::is_default_constructible<std::hash<Key>>,
                         std::is_copy_constructible<std::hash<Key>>,
                         std::is_destructible<std::hash<Key>>,
-                        absl::is_copy_assignable<std::hash<Key>>,
+                        std::is_copy_assignable<std::hash<Key>>,
                         IsHashable<Key>> {};
-
 }  // namespace type_traits_internal
 
 }  // namespace absl
+
 
 #endif  // ABSL_META_TYPE_TRAITS_H_

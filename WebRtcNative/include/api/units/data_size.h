@@ -95,11 +95,11 @@ class DataSize {
     return DataSize::bytes(bytes() + other.bytes());
   }
   DataSize& operator-=(const DataSize& other) {
-    *this = *this - other;
+    bytes_ -= other.bytes();
     return *this;
   }
   DataSize& operator+=(const DataSize& other) {
-    *this = *this + other;
+    bytes_ += other.bytes();
     return *this;
   }
   constexpr double operator/(const DataSize& other) const {

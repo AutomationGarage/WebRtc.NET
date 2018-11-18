@@ -59,7 +59,6 @@ using std::nullopt;
 #include <type_traits>
 #include <utility>
 
-#include "absl/base/attributes.h"
 #include "absl/memory/memory.h"
 #include "absl/meta/type_traits.h"
 #include "absl/types/bad_optional_access.h"
@@ -412,10 +411,10 @@ constexpr copy_traits get_ctor_copy_traits() {
 
 template <typename T>
 constexpr copy_traits get_assign_copy_traits() {
-  return absl::is_copy_assignable<T>::value &&
+  return std::is_copy_assignable<T>::value &&
                  std::is_copy_constructible<T>::value
              ? copy_traits::copyable
-             : absl::is_move_assignable<T>::value &&
+             : std::is_move_assignable<T>::value &&
                        std::is_move_constructible<T>::value
                    ? copy_traits::movable
                    : copy_traits::non_movable;
@@ -701,7 +700,7 @@ class optional : private optional_internal::optional_data<T>,
   // optional::reset()
   //
   // Destroys the inner `T` value of an `absl::optional` if one is present.
-  ABSL_ATTRIBUTE_REINITIALIZES void reset() noexcept { this->destruct(); }
+  void reset() noexcept { this->destruct(); }
 
   // optional::emplace()
   //

@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VPX_VP9_ENCODER_VP9_SPEED_FEATURES_H_
-#define VPX_VP9_ENCODER_VP9_SPEED_FEATURES_H_
+#ifndef VP9_ENCODER_VP9_SPEED_FEATURES_H_
+#define VP9_ENCODER_VP9_SPEED_FEATURES_H_
 
 #include "vp9/common/vp9_enums.h"
 
@@ -136,25 +136,20 @@ typedef enum {
 } INTERP_FILTER_MASK;
 
 typedef enum {
-  // Search partitions using RD/NONRD criterion.
+  // Search partitions using RD/NONRD criterion
   SEARCH_PARTITION,
 
-  // Always use a fixed size partition.
+  // Always use a fixed size partition
   FIXED_PARTITION,
 
   REFERENCE_PARTITION,
 
   // Use an arbitrary partitioning scheme based on source variance within
-  // a 64X64 SB.
+  // a 64X64 SB
   VAR_BASED_PARTITION,
 
-  // Use non-fixed partitions based on source variance.
-  SOURCE_VAR_BASED_PARTITION,
-
-#if CONFIG_ML_VAR_PARTITION
-  // Make partition decisions with machine learning models.
-  ML_BASED_PARTITION
-#endif  // CONFIG_ML_VAR_PARTITION
+  // Use non-fixed partitions based on source variance
+  SOURCE_VAR_BASED_PARTITION
 } PARTITION_SEARCH_TYPE;
 
 typedef enum {
@@ -196,9 +191,8 @@ typedef struct MV_SPEED_FEATURES {
   // the same process. Along the way it skips many diagonals.
   SUBPEL_SEARCH_METHODS subpel_search_method;
 
-  // Subpel MV search level. Can take values 0 - 2. Higher values mean more
-  // extensive subpel search.
-  int subpel_search_level;
+  // Maximum number of steps in logarithmic subpel search before giving up.
+  int subpel_iters_per_step;
 
   // Control when to stop subpel search:
   // 0: Full subpel search.
@@ -242,12 +236,6 @@ typedef enum {
   // detecting overshoot.
   RE_ENCODE_MAXQ = 2
 } OVERSHOOT_DETECTION_CBR_RT;
-
-typedef enum {
-  USE_2_TAPS = 0,
-  USE_4_TAPS,
-  USE_8_TAPS,
-} SUBPEL_SEARCH_TYPE;
 
 typedef struct SPEED_FEATURES {
   MV_SPEED_FEATURES mv;
@@ -343,20 +331,12 @@ typedef struct SPEED_FEATURES {
   // rd than partition type split.
   int less_rectangular_check;
 
-  // Disable testing non square partitions(eg 16x32) for block sizes larger than
-  // use_square_only_thresh_high or smaller than use_square_only_thresh_low.
+  // Disable testing non square partitions. (eg 16x32)
   int use_square_partition_only;
-  BLOCK_SIZE use_square_only_thresh_high;
-  BLOCK_SIZE use_square_only_thresh_low;
+  BLOCK_SIZE use_square_only_threshold;
 
   // Prune reference frames for rectangular partitions.
   int prune_ref_frame_for_rect_partitions;
-
-  // Threshold values used for ML based rectangular partition search pruning.
-  // If < 0, the feature is turned off.
-  // Higher values mean more aggressiveness to skip rectangular partition
-  // search that results in better encoding speed but worse coding performance.
-  int ml_prune_rect_partition_threhold[4];
 
   // Sets min and max partition sizes for this 64x64 region based on the
   // same 64x64 in last encoded frame, and the left and above neighbor.
@@ -514,16 +494,10 @@ typedef struct SPEED_FEATURES {
 
   // Use ML-based partition search early breakout.
   int use_ml_partition_search_breakout;
-  // Higher values mean more aggressiveness for partition search breakout that
-  // results in better encoding  speed but worse compression performance.
   float ml_partition_search_breakout_thresh[3];
 
   // Machine-learning based partition search early termination
   int ml_partition_search_early_termination;
-
-  // Machine-learning based partition search pruning using prediction residue
-  // variance.
-  int ml_var_partition_pruning;
 
   // Allow skipping partition search for still image frame
   int allow_partition_search_skip;
@@ -592,10 +566,6 @@ typedef struct SPEED_FEATURES {
 
   // Allow for disabling golden reference.
   int disable_golden_ref;
-
-  // Allow sub-pixel search to use interpolation filters with different taps in
-  // order to achieve accurate motion search result.
-  SUBPEL_SEARCH_TYPE use_accurate_subpel_search;
 } SPEED_FEATURES;
 
 struct VP9_COMP;
@@ -607,4 +577,4 @@ void vp9_set_speed_features_framesize_dependent(struct VP9_COMP *cpi);
 }  // extern "C"
 #endif
 
-#endif  // VPX_VP9_ENCODER_VP9_SPEED_FEATURES_H_
+#endif  // VP9_ENCODER_VP9_SPEED_FEATURES_H_

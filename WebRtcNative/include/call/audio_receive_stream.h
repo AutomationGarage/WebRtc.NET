@@ -27,7 +27,6 @@
 
 namespace webrtc {
 class AudioSinkInterface;
-class FrameDecryptorInterface;
 
 class AudioReceiveStream {
  public:
@@ -121,11 +120,6 @@ class AudioReceiveStream {
     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory;
 
     absl::optional<AudioCodecPairId> codec_pair_id;
-
-    // An optional custom frame decryptor that allows the entire frame to be
-    // decrypted in whatever way the caller choses. This is not required by
-    // default.
-    rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor;
   };
 
   // Reconfigure the stream according to the Configuration.

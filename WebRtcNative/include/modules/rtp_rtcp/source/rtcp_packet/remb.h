@@ -26,7 +26,6 @@ class Remb : public Psfb {
   static constexpr size_t kMaxNumberOfSsrcs = 0xff;
 
   Remb();
-  Remb(const Remb&);
   ~Remb() override;
 
   // Parse assumes header is already parsed and validated.

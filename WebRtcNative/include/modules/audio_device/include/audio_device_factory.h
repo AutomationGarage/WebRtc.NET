@@ -35,9 +35,6 @@ namespace webrtc {
 //
 rtc::scoped_refptr<AudioDeviceModule> CreateWindowsCoreAudioAudioDeviceModule();
 
-rtc::scoped_refptr<AudioDeviceModuleForTest>
-CreateWindowsCoreAudioAudioDeviceModuleForTest();
-
 }  // namespace webrtc
 
 #endif  //  MODULES_AUDIO_DEVICE_INCLUDE_AUDIO_DEVICE_FACTORY_H_

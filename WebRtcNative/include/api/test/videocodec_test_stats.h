@@ -25,9 +25,7 @@ class VideoCodecTestStats {
  public:
   // Statistics for one processed frame.
   struct FrameStatistics {
-    FrameStatistics(size_t frame_number,
-                    size_t rtp_timestamp,
-                    size_t spatial_idx);
+    FrameStatistics(size_t frame_number, size_t rtp_timestamp);
     FrameStatistics(const FrameStatistics& rhs);
 
     std::string ToString() const;
@@ -122,7 +120,7 @@ class VideoCodecTestStats {
   virtual ~VideoCodecTestStats() = default;
 
   // Creates a FrameStatistics for the next frame to be processed.
-  virtual void AddFrame(const FrameStatistics& frame_stat) = 0;
+  virtual FrameStatistics* AddFrame(size_t timestamp, size_t spatial_idx) = 0;
 
   // Returns the FrameStatistics corresponding to |frame_number| or |timestamp|.
   virtual FrameStatistics* GetFrame(size_t frame_number,

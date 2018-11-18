@@ -37,21 +37,15 @@ class FieldTrialParameterInterface {
   virtual ~FieldTrialParameterInterface();
 
  protected:
-  // Protected to allow implementations to provide assignment and copy.
-  FieldTrialParameterInterface(const FieldTrialParameterInterface&) = default;
-  FieldTrialParameterInterface& operator=(const FieldTrialParameterInterface&) =
-      default;
   explicit FieldTrialParameterInterface(std::string key);
   friend void ParseFieldTrial(
       std::initializer_list<FieldTrialParameterInterface*> fields,
       std::string raw_string);
-  void MarkAsUsed() { used_ = true; }
   virtual bool Parse(absl::optional<std::string> str_value) = 0;
   std::string Key() const;
 
  private:
-  std::string key_;
-  bool used_ = false;
+  const std::string key_;
 };
 
 // ParseFieldTrial function parses the given string and fills the given fields
@@ -74,7 +68,6 @@ class FieldTrialParameter : public FieldTrialParameterInterface {
       : FieldTrialParameterInterface(key), value_(default_value) {}
   T Get() const { return value_; }
   operator T() const { return Get(); }
-  const T* operator->() const { return &value_; }
 
  protected:
   bool Parse(absl::optional<std::string> str_value) override {
@@ -142,11 +135,7 @@ class FieldTrialOptional : public FieldTrialParameterInterface {
       : FieldTrialParameterInterface(key) {}
   FieldTrialOptional(std::string key, absl::optional<T> default_value)
       : FieldTrialParameterInterface(key), value_(default_value) {}
-  absl::optional<T> GetOptional() const { return value_; }
-  const T& Value() const { return value_.value(); }
-  const T& operator*() const { return value_.value(); }
-  const T* operator->() const { return &value_.value(); }
-  operator bool() const { return value_.has_value(); }
+  absl::optional<T> Get() const { return value_; }
 
  protected:
   bool Parse(absl::optional<std::string> str_value) override {
@@ -173,7 +162,6 @@ class FieldTrialFlag : public FieldTrialParameterInterface {
   explicit FieldTrialFlag(std::string key);
   FieldTrialFlag(std::string key, bool default_value);
   bool Get() const;
-  operator bool() const;
 
  protected:
   bool Parse(absl::optional<std::string> str_value) override;

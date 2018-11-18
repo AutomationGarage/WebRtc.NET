@@ -39,7 +39,6 @@ enum Modes {
   kModePreemptiveExpandFail,
   kModeRfc3389Cng,
   kModeCodecInternalCng,
-  kModeCodecPlc,
   kModeDtmf,
   kModeError,
   kModeUndefined = -1

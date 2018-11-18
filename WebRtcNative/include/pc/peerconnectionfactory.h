@@ -15,7 +15,6 @@
 #include <memory>
 #include <string>
 
-#include "api/media_transport_interface.h"
 #include "api/mediastreaminterface.h"
 #include "api/peerconnectioninterface.h"
 #include "media/sctp/sctptransportinternal.h"
@@ -97,10 +96,6 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   virtual rtc::Thread* network_thread();
   const Options& options() const { return options_; }
 
-  MediaTransportFactory* media_transport_factory() {
-    return media_transport_factory_.get();
-  }
-
  protected:
   PeerConnectionFactory(
       rtc::Thread* network_thread,
@@ -153,7 +148,6 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
       injected_network_controller_factory_;
   std::unique_ptr<NetworkControllerFactoryInterface>
       bbr_network_controller_factory_;
-  std::unique_ptr<MediaTransportFactory> media_transport_factory_;
 };
 
 }  // namespace webrtc

@@ -15,6 +15,7 @@
 
 #include <memory>
 
+#include "modules/audio_coding/test/ACMTest.h"
 #include "modules/audio_coding/test/Channel.h"
 #include "modules/audio_coding/test/PCMFile.h"
 
@@ -56,12 +57,12 @@ class TestPackStereo : public AudioPacketizationCallback {
   bool lost_packet_;
 };
 
-class TestStereo {
+class TestStereo : public ACMTest {
  public:
   explicit TestStereo(int test_mode);
   ~TestStereo();
 
-  void Perform();
+  void Perform() override;
 
  private:
   // The default value of '-1' indicates that the registration is based only on
@@ -72,7 +73,8 @@ class TestStereo {
                          int32_t samp_freq_hz,
                          int rate,
                          int pack_size,
-                         int channels);
+                         int channels,
+                         int payload_type);
 
   void Run(TestPackStereo* channel,
            int in_channels,
@@ -96,6 +98,19 @@ class TestStereo {
   uint16_t pack_size_bytes_;
   int counter_;
   char* send_codec_name_;
+
+  // Payload types for stereo codecs and CNG
+  int g722_pltype_;
+  int l16_8khz_pltype_;
+  int l16_16khz_pltype_;
+  int l16_32khz_pltype_;
+#ifdef PCMA_AND_PCMU
+  int pcma_pltype_;
+  int pcmu_pltype_;
+#endif
+#ifdef WEBRTC_CODEC_OPUS
+  int opus_pltype_;
+#endif
 };
 
 }  // namespace webrtc

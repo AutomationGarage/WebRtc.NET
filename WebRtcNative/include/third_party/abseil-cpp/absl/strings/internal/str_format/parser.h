@@ -75,14 +75,14 @@ struct UnboundConversion {
 bool ConsumeUnboundConversion(string_view* src, UnboundConversion* conv,
                               int* next_arg);
 
-// Parse the format string provided in 'src' and pass the identified items into
+// Parse the format std::string provided in 'src' and pass the identified items into
 // 'consumer'.
 // Text runs will be passed by calling
 //   Consumer::Append(string_view);
 // ConversionItems will be passed by calling
 //   Consumer::ConvertOne(UnboundConversion, string_view);
 // In the case of ConvertOne, the string_view that is passed is the
-// portion of the format string corresponding to the conversion, not including
+// portion of the format std::string corresponding to the conversion, not including
 // the leading %. On success, it returns true. On failure, it stops and returns
 // false.
 template <typename Consumer>
@@ -90,7 +90,7 @@ bool ParseFormatString(string_view src, Consumer consumer) {
   int next_arg = 0;
   while (!src.empty()) {
     const char* percent =
-        static_cast<const char*>(memchr(src.data(), '%', src.size()));
+        static_cast<const char*>(memchr(src.begin(), '%', src.size()));
     if (!percent) {
       // We found the last substring.
       return consumer.Append(src);
@@ -98,7 +98,7 @@ bool ParseFormatString(string_view src, Consumer consumer) {
     // We found a percent, so push the text run then process the percent.
     size_t percent_loc = percent - src.data();
     if (!consumer.Append(string_view(src.data(), percent_loc))) return false;
-    if (percent + 1 >= src.data() + src.size()) return false;
+    if (percent + 1 >= src.end()) return false;
 
     UnboundConversion conv;
 
@@ -178,8 +178,7 @@ class ParsedFormatBase {
     const char* const base = data_.get();
     string_view text(base, 0);
     for (const auto& item : items_) {
-      const char* const end = text.data() + text.size();
-      text = string_view(end, (base + item.text_end) - end);
+      text = string_view(text.end(), (base + item.text_end) - text.end());
       if (item.is_conversion) {
         if (!consumer.ConvertOne(item.conv, text)) return false;
       } else {
@@ -238,7 +237,7 @@ class ParsedFormatBase {
 // This class also supports runtime format checking with the ::New() and
 // ::NewAllowIgnored() factory functions.
 // This is the only API that allows the user to pass a runtime specified format
-// string. These factory functions will return NULL if the format does not match
+// std::string. These factory functions will return NULL if the format does not match
 // the conversions requested by the user.
 template <str_format_internal::Conv... C>
 class ExtendedParsedFormat : public str_format_internal::ParsedFormatBase {

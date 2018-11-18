@@ -43,9 +43,6 @@ class MockAecDump : public AecDump {
                void(const AudioFrameView<const float>& src));
 
   MOCK_METHOD1(WriteConfig, void(const InternalAPMConfig& config));
-
-  MOCK_METHOD1(WriteRuntimeSetting,
-               void(const AudioProcessing::RuntimeSetting& config));
 };
 
 }  // namespace test

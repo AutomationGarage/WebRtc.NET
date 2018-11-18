@@ -11,30 +11,9 @@
 #ifndef RTC_BASE_WIN32SOCKETINIT_H_
 #define RTC_BASE_WIN32SOCKETINIT_H_
 
-#ifndef WEBRTC_WIN
-#error "Only #include this header in Windows builds"
-#endif
-
-#include "rtc_base/win32.h"
-
 namespace rtc {
 
-class WinsockInitializer {
- public:
-  WinsockInitializer() {
-    WSADATA wsaData;
-    WORD wVersionRequested = MAKEWORD(1, 0);
-    err_ = WSAStartup(wVersionRequested, &wsaData);
-  }
-  ~WinsockInitializer() {
-    if (!err_)
-      WSACleanup();
-  }
-  int error() { return err_; }
-
- private:
-  int err_;
-};
+void EnsureWinsockInit();
 
 }  // namespace rtc
 

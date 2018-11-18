@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VPX_VP8_ENCODER_MCOMP_H_
-#define VPX_VP8_ENCODER_MCOMP_H_
+#ifndef VP8_ENCODER_MCOMP_H_
+#define VP8_ENCODER_MCOMP_H_
 
 #include "block.h"
 #include "vpx_dsp/variance.h"
@@ -78,4 +78,4 @@ typedef int (*vp8_diamond_search_fn_t)(MACROBLOCK *x, BLOCK *b, BLOCKD *d,
 }  // extern "C"
 #endif
 
-#endif  // VPX_VP8_ENCODER_MCOMP_H_
+#endif  // VP8_ENCODER_MCOMP_H_

@@ -24,8 +24,6 @@
 #include <string>
 #include <vector>
 
-#include <openssl/span.h>
-
 #include "../internal.h"
 
 
@@ -37,22 +35,26 @@ void hexdump(FILE *fp, const char *msg, const void *in, size_t len);
 // allows it to be used in EXPECT_EQ macros.
 struct Bytes {
   Bytes(const uint8_t *data_arg, size_t len_arg)
-      : span_(data_arg, len_arg) {}
+      : data(data_arg), len(len_arg) {}
   Bytes(const char *data_arg, size_t len_arg)
-      : span_(reinterpret_cast<const uint8_t *>(data_arg), len_arg) {}
+      : data(reinterpret_cast<const uint8_t *>(data_arg)), len(len_arg) {}
 
   explicit Bytes(const char *str)
-      : span_(reinterpret_cast<const uint8_t *>(str), strlen(str)) {}
+      : data(reinterpret_cast<const uint8_t *>(str)), len(strlen(str)) {}
   explicit Bytes(const std::string &str)
-      : span_(reinterpret_cast<const uint8_t *>(str.data()), str.size()) {}
-  explicit Bytes(bssl::Span<const uint8_t> span)
-      : span_(span) {}
+      : data(reinterpret_cast<const uint8_t *>(str.data())), len(str.size()) {}
+  explicit Bytes(const std::vector<uint8_t> &vec)
+      : data(vec.data()), len(vec.size()) {}
 
-  bssl::Span<const uint8_t> span_;
+  template <size_t N>
+  explicit Bytes(const uint8_t (&array)[N]) : data(array), len(N) {}
+
+  const uint8_t *data;
+  size_t len;
 };
 
 inline bool operator==(const Bytes &a, const Bytes &b) {
-  return a.span_ == b.span_;
+  return a.len == b.len && OPENSSL_memcmp(a.data, b.data, a.len) == 0;
 }
 
 inline bool operator!=(const Bytes &a, const Bytes &b) { return !(a == b); }

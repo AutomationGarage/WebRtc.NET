@@ -17,7 +17,6 @@
 #include <string>
 #include <vector>
 
-#include "api/media_transport_interface.h"
 #include "api/peerconnectioninterface.h"
 #include "api/turncustomizer.h"
 #include "pc/iceserverparsing.h"
@@ -358,8 +357,7 @@ class PeerConnection : public PeerConnectionInternal,
   CreateSender(cricket::MediaType media_type,
                const std::string& id,
                rtc::scoped_refptr<MediaStreamTrackInterface> track,
-               const std::vector<std::string>& stream_ids,
-               const std::vector<RtpEncodingParameters>& send_encodings);
+               const std::vector<std::string>& stream_ids);
 
   rtc::scoped_refptr<RtpReceiverProxyWithInternal<RtpReceiverInternal>>
   CreateReceiver(cricket::MediaType media_type, const std::string& receiver_id);
@@ -1026,10 +1024,6 @@ class PeerConnection : public PeerConnectionInternal,
   cricket::DataChannelType data_channel_type_ = cricket::DCT_NONE;
   // List of content names for which the remote side triggered an ICE restart.
   std::set<std::string> pending_ice_restarts_;
-
-  // Optional media transport for sending / receiving encoded frames.
-  // If available, media transport will be used instead of RTP / SRTP.
-  std::unique_ptr<MediaTransportFactory> media_transport_factory_;
 
   std::unique_ptr<WebRtcSessionDescriptionFactory> webrtc_session_desc_factory_;
 

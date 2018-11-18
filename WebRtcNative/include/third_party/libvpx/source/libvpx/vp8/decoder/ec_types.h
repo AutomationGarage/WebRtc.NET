@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VPX_VP8_DECODER_EC_TYPES_H_
-#define VPX_VP8_DECODER_EC_TYPES_H_
+#ifndef VP8_DECODER_EC_TYPES_H_
+#define VP8_DECODER_EC_TYPES_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,4 +50,4 @@ typedef struct {
 }  // extern "C"
 #endif
 
-#endif  // VPX_VP8_DECODER_EC_TYPES_H_
+#endif  // VP8_DECODER_EC_TYPES_H_

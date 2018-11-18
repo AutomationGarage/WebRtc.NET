@@ -22,6 +22,9 @@ class VCMTimestampMap {
   explicit VCMTimestampMap(size_t capacity);
   ~VCMTimestampMap();
 
+  // Empty the map.
+  void Reset();
+
   void Add(uint32_t timestamp, VCMFrameInformation* data);
   VCMFrameInformation* Pop(uint32_t timestamp);
 

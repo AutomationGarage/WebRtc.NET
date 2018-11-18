@@ -11,6 +11,7 @@
 #ifndef RTC_BASE_STRINGENCODE_H_
 #define RTC_BASE_STRINGENCODE_H_
 
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -163,7 +164,6 @@ std::string ToString(long long int s);
 std::string ToString(unsigned long long int s);
 
 std::string ToString(double t);
-std::string ToString(long double t);
 
 std::string ToString(const void* p);
 

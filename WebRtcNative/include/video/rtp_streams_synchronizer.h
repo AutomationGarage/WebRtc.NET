@@ -28,7 +28,6 @@ class Syncable;
 class RtpStreamsSynchronizer : public Module {
  public:
   explicit RtpStreamsSynchronizer(Syncable* syncable_video);
-  ~RtpStreamsSynchronizer() override;
 
   void ConfigureSync(Syncable* syncable_audio);
 

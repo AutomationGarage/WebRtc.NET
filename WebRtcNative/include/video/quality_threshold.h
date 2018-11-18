@@ -25,7 +25,6 @@ class QualityThreshold {
                    int high_threshold,
                    float fraction,
                    int max_measurements);
-  ~QualityThreshold();
 
   void AddMeasurement(int measurement);
   absl::optional<bool> IsHigh() const;

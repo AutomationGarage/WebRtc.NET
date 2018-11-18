@@ -20,8 +20,6 @@
 #include "absl/types/optional.h"
 #include "api/audio_codecs/audio_encoder.h"
 #include "api/audio_options.h"
-#include "api/crypto/framedecryptorinterface.h"
-#include "api/crypto/frameencryptorinterface.h"
 #include "api/rtcerror.h"
 #include "api/rtpparameters.h"
 #include "api/rtpreceiverinterface.h"
@@ -43,7 +41,6 @@
 #include "rtc_base/networkroute.h"
 #include "rtc_base/socket.h"
 #include "rtc_base/stringencode.h"
-#include "rtc_base/strings/string_builder.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 
 namespace rtc {
@@ -79,7 +76,7 @@ static std::string ToStringIfSet(const char* key,
 
 template <class T>
 static std::string VectorToString(const std::vector<T>& vals) {
-  rtc::StringBuilder ost;  // no-presubmit-check TODO(webrtc:8982)
+  std::ostringstream ost;  // no-presubmit-check TODO(webrtc:8982)
   ost << "[";
   for (size_t i = 0; i < vals.size(); ++i) {
     if (i > 0) {
@@ -88,7 +85,7 @@ static std::string VectorToString(const std::vector<T>& vals) {
     ost << vals[i].ToString();
   }
   ost << "]";
-  return ost.Release();
+  return ost.str();
 }
 
 // Options that can be applied to a VideoMediaChannel or a VideoMediaEngine.
@@ -113,14 +110,14 @@ struct VideoOptions {
   bool operator!=(const VideoOptions& o) const { return !(*this == o); }
 
   std::string ToString() const {
-    rtc::StringBuilder ost;
+    std::ostringstream ost;
     ost << "VideoOptions {";
     ost << ToStringIfSet("noise reduction", video_noise_reduction);
     ost << ToStringIfSet("screencast min bitrate kbps",
                          screencast_min_bitrate_kbps);
     ost << ToStringIfSet("is_screencast ", is_screencast);
     ost << "}";
-    return ost.Release();
+    return ost.str();
   }
 
   // Enable denoising? This flag comes from the getUserMedia
@@ -152,12 +149,12 @@ struct RtpHeaderExtension {
   RtpHeaderExtension(const std::string& uri, int id) : uri(uri), id(id) {}
 
   std::string ToString() const {
-    rtc::StringBuilder ost;
+    std::ostringstream ost;
     ost << "{";
     ost << "uri: " << uri;
     ost << ", id: " << id;
     ost << "}";
-    return ost.Release();
+    return ost.str();
   }
 
   std::string uri;
@@ -179,12 +176,14 @@ class MediaChannel : public sigslot::has_slots<> {
     virtual ~NetworkInterface() {}
   };
 
-  explicit MediaChannel(const MediaConfig& config);
-  MediaChannel();
-  ~MediaChannel() override;
+  explicit MediaChannel(const MediaConfig& config)
+      : enable_dscp_(config.enable_dscp), network_interface_(NULL) {}
+  MediaChannel() : enable_dscp_(false), network_interface_(NULL) {}
+  ~MediaChannel() override {}
 
   // Sets the abstract interface class for sending RTP/RTCP data.
   virtual void SetInterface(NetworkInterface* iface);
+  virtual rtc::DiffServCodePoint PreferredDscp() const;
   // Called when a RTP packet is received.
   virtual void OnPacketReceived(rtc::CopyOnWriteBuffer* packet,
                                 const rtc::PacketTime& packet_time) = 0;
@@ -213,22 +212,9 @@ class MediaChannel : public sigslot::has_slots<> {
   // ssrc must be the first SSRC of the media stream if the stream uses
   // multiple SSRCs.
   virtual bool RemoveRecvStream(uint32_t ssrc) = 0;
+
   // Returns the absoulte sendtime extension id value from media channel.
   virtual int GetRtpSendTimeExtnId() const;
-  // Set the frame encryptor to use on all outgoing frames. This is optional.
-  // This pointers lifetime is managed by the set of RtpSender it is attached
-  // to.
-  // TODO(benwright) make pure virtual once internal supports it.
-  virtual void SetFrameEncryptor(
-      uint32_t ssrc,
-      rtc::scoped_refptr<webrtc::FrameEncryptorInterface> frame_encryptor);
-  // Set the frame decryptor to use on all incoming frames. This is optional.
-  // This pointers lifetimes is managed by the set of RtpReceivers it is
-  // attached to.
-  // TODO(benwright) make pure virtual once internal supports it.
-  virtual void SetFrameDecryptor(
-      uint32_t ssrc,
-      rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor);
 
   // Base method to send packet using NetworkInterface.
   bool SendPacket(rtc::CopyOnWriteBuffer* packet,
@@ -250,11 +236,6 @@ class MediaChannel : public sigslot::has_slots<> {
 
     return network_interface_->SetOption(type, opt, option);
   }
-
- protected:
-  virtual rtc::DiffServCodePoint PreferredDscp() const;
-
-  bool DscpEnabled() const { return enable_dscp_; }
 
  private:
   // This method sets DSCP |value| on both RTP and RTCP channels.
@@ -621,7 +602,7 @@ struct RtpParameters {
   RtcpParameters rtcp;
 
   std::string ToString() const {
-    rtc::StringBuilder ost;
+    std::ostringstream ost;
     ost << "{";
     const char* separator = "";
     for (const auto& entry : ToStringMap()) {
@@ -629,7 +610,7 @@ struct RtpParameters {
       separator = ", ";
     }
     ost << "}";
-    return ost.Release();
+    return ost.str();
   }
 
  protected:
@@ -787,8 +768,6 @@ class VideoMediaChannel : public MediaChannel {
   virtual void FillBitrateInfo(BandwidthEstimationInfo* bwe_info) = 0;
   // Gets quality stats for the channel.
   virtual bool GetStats(VideoMediaInfo* info) = 0;
-
-  virtual std::vector<webrtc::RtpSource> GetSources(uint32_t ssrc) const = 0;
 };
 
 enum DataMessageType {

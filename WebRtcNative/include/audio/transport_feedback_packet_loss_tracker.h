@@ -35,7 +35,6 @@ class TransportFeedbackPacketLossTracker final {
   TransportFeedbackPacketLossTracker(int64_t max_window_size_ms,
                                      size_t plr_min_num_acked_packets,
                                      size_t rplr_min_num_acked_pairs);
-  ~TransportFeedbackPacketLossTracker();
 
   void OnPacketAdded(uint16_t seq_num, int64_t send_time_ms);
 

@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VPX_VP9_ENCODER_VP9_MULTI_THREAD_H_
-#define VPX_VP9_ENCODER_VP9_MULTI_THREAD_H_
+#ifndef VP9_ENCODER_VP9_MULTI_THREAD_H
+#define VP9_ENCODER_VP9_MULTI_THREAD_H
 
 #include "vp9/encoder/vp9_encoder.h"
 #include "vp9/encoder/vp9_job_queue.h"
@@ -38,4 +38,4 @@ int vp9_get_tiles_proc_status(MultiThreadHandle *multi_thread_ctxt,
                               int *tile_completion_status, int *cur_tile_id,
                               int tile_cols);
 
-#endif  // VPX_VP9_ENCODER_VP9_MULTI_THREAD_H_
+#endif  // VP9_ENCODER_VP9_MULTI_THREAD_H

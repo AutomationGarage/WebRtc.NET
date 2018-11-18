@@ -50,7 +50,7 @@ void TestParseCorruptedString(const T& message) {
       s[i] ^= c;
       google::protobuf::Arena arena;
       T* message =
-          google::protobuf::Arena::CreateMessage<T>(use_arena ? &arena : nullptr);
+          google::protobuf::Arena::CreateMessage<T>(use_arena ? &arena : NULL);
       if (message->ParseFromString(s)) {
         ++success_count;
       }
@@ -76,7 +76,7 @@ class NoHeapChecker {
  private:
   class NewDeleteCapture {
    public:
-    // TOOD(xiaofeng): Implement this for opensource protobuf.
+    // TODO(xiaofeng): Implement this for opensource protobuf.
     void Hook() {}
     void Unhook() {}
     int alloc_count() { return 0; }

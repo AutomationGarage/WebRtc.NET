@@ -19,6 +19,7 @@
 #include <memory>
 #include <numeric>
 #include <set>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -32,7 +33,6 @@
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "rtc_base/constructormagic.h"
 #include "rtc_base/random.h"
-#include "rtc_base/strings/string_builder.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -128,10 +128,10 @@ class Stats {
   }
 
   std::string AsString() {
-    rtc::StringBuilder ss;
+    std::stringstream ss;
     ss << (GetMean() >= 0 ? GetMean() : -1) << ", "
        << (GetStdDev() >= 0 ? GetStdDev() : -1);
-    return ss.Release();
+    return ss.str();
   }
 
   void Log(const std::string& units) {

@@ -20,23 +20,14 @@ namespace webrtc {
 
 class ApmDataDumper;
 
-struct SignalWithLevels {
-  SignalWithLevels(AudioFrameView<float> float_frame);
-  SignalWithLevels(const SignalWithLevels&);
-
-  float input_level_dbfs = -1.f;
-  float input_noise_level_dbfs = -1.f;
-  VadWithLevel::LevelAndProbability vad_result;
-  float limiter_audio_level_dbfs = -1.f;
-  bool estimate_is_confident = false;
-  AudioFrameView<float> float_frame;
-};
-
 class AdaptiveDigitalGainApplier {
  public:
   explicit AdaptiveDigitalGainApplier(ApmDataDumper* apm_data_dumper);
   // Decide what gain to apply.
-  void Process(SignalWithLevels signal_with_levels);
+  void Process(float input_level_dbfs,
+               float input_noise_level_dbfs,
+               const VadWithLevel::LevelAndProbability vad_result,
+               AudioFrameView<float> float_frame);
 
  private:
   float last_gain_db_ = kInitialAdaptiveDigitalGainDb;

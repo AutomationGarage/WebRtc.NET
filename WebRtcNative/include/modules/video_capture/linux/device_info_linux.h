@@ -19,27 +19,30 @@ namespace videocapturemodule {
 class DeviceInfoLinux : public DeviceInfoImpl {
  public:
   DeviceInfoLinux();
-  ~DeviceInfoLinux() override;
-  uint32_t NumberOfDevices() override;
-  int32_t GetDeviceName(uint32_t deviceNumber,
-                        char* deviceNameUTF8,
-                        uint32_t deviceNameLength,
-                        char* deviceUniqueIdUTF8,
-                        uint32_t deviceUniqueIdUTF8Length,
-                        char* productUniqueIdUTF8 = 0,
-                        uint32_t productUniqueIdUTF8Length = 0) override;
+  virtual ~DeviceInfoLinux();
+  virtual uint32_t NumberOfDevices();
+  virtual int32_t GetDeviceName(uint32_t deviceNumber,
+                                char* deviceNameUTF8,
+                                uint32_t deviceNameLength,
+                                char* deviceUniqueIdUTF8,
+                                uint32_t deviceUniqueIdUTF8Length,
+                                char* productUniqueIdUTF8 = 0,
+                                uint32_t productUniqueIdUTF8Length = 0);
   /*
    * Fills the membervariable _captureCapabilities with capabilites for the
    * given device name.
    */
-  int32_t CreateCapabilityMap(const char* deviceUniqueIdUTF8) override;
-  int32_t DisplayCaptureSettingsDialogBox(const char* /*deviceUniqueIdUTF8*/,
-                                          const char* /*dialogTitleUTF8*/,
-                                          void* /*parentWindow*/,
-                                          uint32_t /*positionX*/,
-                                          uint32_t /*positionY*/) override;
+  virtual int32_t CreateCapabilityMap(const char* deviceUniqueIdUTF8);
+  virtual int32_t DisplayCaptureSettingsDialogBox(
+      const char* /*deviceUniqueIdUTF8*/,
+      const char* /*dialogTitleUTF8*/,
+      void* /*parentWindow*/,
+      uint32_t /*positionX*/,
+      uint32_t /*positionY*/) {
+    return -1;
+  }
   int32_t FillCapabilities(int fd);
-  int32_t Init() override;
+  int32_t Init();
 
  private:
   bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);

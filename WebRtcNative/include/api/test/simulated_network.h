@@ -42,11 +42,11 @@ struct PacketDeliveryInfo {
   uint64_t packet_id;
 };
 
-// BuiltInNetworkBehaviorConfig is a built-in network behavior configuration
-// for built-in network behavior that will be used by WebRTC if no custom
-// NetworkBehaviorInterface is provided.
-struct BuiltInNetworkBehaviorConfig {
-  BuiltInNetworkBehaviorConfig() {}
+// DefaultNetworkSimulationConfig is a default network simulation configuration
+// for default network simulation that will be used by WebRTC if no custom
+// NetworkSimulationInterface is provided.
+struct DefaultNetworkSimulationConfig {
+  DefaultNetworkSimulationConfig() {}
   // Queue length in number of packets.
   size_t queue_length_packets = 0;
   // Delay in addition to capacity induced delay.
@@ -63,12 +63,12 @@ struct BuiltInNetworkBehaviorConfig {
   int avg_burst_loss_length = -1;
 };
 
-// TODO(bugs.webrtc.org/9630) remove it after migration to new API.
-// Deprecated. DO NOT USE. Use BuiltInNetworkBehaviorConfig instead.
-using DefaultNetworkSimulationConfig = BuiltInNetworkBehaviorConfig;
-
-class NetworkBehaviorInterface {
+class NetworkSimulationInterface {
  public:
+  // DO NOT USE. Use DefaultNetworkSimulationConfig directly. This reference
+  // should be removed when all users will be switched on direct usage.
+  using SimulatedNetworkConfig = DefaultNetworkSimulationConfig;
+
   virtual bool EnqueuePacket(PacketInFlightInfo packet_info) = 0;
   // Retrieves all packets that should be delivered by the given receive time.
   virtual std::vector<PacketDeliveryInfo> DequeueDeliverablePackets(
@@ -76,12 +76,8 @@ class NetworkBehaviorInterface {
   // Returns time in microseconds when caller should call
   // DequeueDeliverablePackets to get next set of packets to deliver.
   virtual absl::optional<int64_t> NextDeliveryTimeUs() const = 0;
-  virtual ~NetworkBehaviorInterface() = default;
+  virtual ~NetworkSimulationInterface() = default;
 };
-
-// TODO(bugs.webrtc.org/9630) remove it after migration to new API.
-// Deprecated. DO NOT USE. Use NetworkBehaviorInterface instead.
-using NetworkSimulationInterface = NetworkBehaviorInterface;
 
 }  // namespace webrtc
 

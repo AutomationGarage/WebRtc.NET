@@ -24,18 +24,18 @@ namespace webrtc {
 class FrameDropper {
  public:
   FrameDropper();
-  ~FrameDropper();
+  virtual ~FrameDropper() {}
 
   // Resets the FrameDropper to its initial state.
-  void Reset();
+  virtual void Reset();
 
-  void Enable(bool enable);
+  virtual void Enable(bool enable);
 
   // Answers the question if it's time to drop a frame if we want to reach a
   // given frame rate. Must be called for every frame.
   //
   // Return value     : True if we should drop the current frame.
-  bool DropFrame();
+  virtual bool DropFrame();
 
   // Updates the FrameDropper with the size of the latest encoded frame.
   // The FrameDropper calculates a new drop ratio (can be seen as the
@@ -45,15 +45,15 @@ class FrameDropper {
   //          - framesize_bytes    : The size of the latest frame returned
   //                                 from the encoder.
   //          - delta_frame        : True if the encoder returned a key frame.
-  void Fill(size_t framesize_bytes, bool delta_frame);
+  virtual void Fill(size_t framesize_bytes, bool delta_frame);
 
-  void Leak(uint32_t input_framerate);
+  virtual void Leak(uint32_t input_framerate);
 
   // Sets the target bit rate and the frame rate produced by the camera.
   //
   // Input:
   //          - bitrate       : The target bit rate.
-  void SetRates(float bitrate, float incoming_frame_rate);
+  virtual void SetRates(float bitrate, float incoming_frame_rate);
 
  private:
   void UpdateRatio();

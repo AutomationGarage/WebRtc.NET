@@ -33,6 +33,9 @@
 
 #include <map>
 #include <memory>
+#ifndef _SHARED_PTR_H
+#include <google/protobuf/stubs/shared_ptr.h>
+#endif
 #include <vector>
 
 #include <google/protobuf/stubs/common.h>
@@ -67,7 +70,7 @@ class Context {
 
   // Get the name resolver associated with this context. The resolver
   // can be used to map descriptors to Java class names.
-  ClassNameResolver* GetNameResolver() const;
+  ClassNameResolver* GetNameResolver();
 
   // Get the FieldGeneratorInfo for a given field.
   const FieldGeneratorInfo* GetFieldGeneratorInfo(
@@ -94,7 +97,7 @@ class Context {
   void InitializeFieldGeneratorInfoForFields(
       const std::vector<const FieldDescriptor*>& fields);
 
-  std::unique_ptr<ClassNameResolver> name_resolver_;
+  google::protobuf::scoped_ptr<ClassNameResolver> name_resolver_;
   std::map<const FieldDescriptor*, FieldGeneratorInfo>
       field_generator_info_map_;
   std::map<const OneofDescriptor*, OneofGeneratorInfo>

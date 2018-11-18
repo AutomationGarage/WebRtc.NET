@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VPX_VP9_DECODER_VP9_DECODER_H_
-#define VPX_VP9_DECODER_VP9_DECODER_H_
+#ifndef VP9_DECODER_VP9_DECODER_H_
+#define VP9_DECODER_VP9_DECODER_H_
 
 #include "./vpx_config.h"
 
@@ -37,6 +37,8 @@ typedef struct TileWorkerData {
   int buf_start, buf_end;  // pbi->tile_buffers to decode, inclusive
   vpx_reader bit_reader;
   FRAME_COUNTS counts;
+  LFWorkerData *lf_data;
+  VP9LfSync *lf_sync;
   DECLARE_ALIGNED(16, MACROBLOCKD, xd);
   /* dqcoeff are shared by all the planes. So planes must be decoded serially */
   DECLARE_ALIGNED(16, tran_low_t, dqcoeff[32 * 32]);
@@ -131,4 +133,4 @@ static INLINE void decrease_ref_count(int idx, RefCntBuffer *const frame_bufs,
 }  // extern "C"
 #endif
 
-#endif  // VPX_VP9_DECODER_VP9_DECODER_H_
+#endif  // VP9_DECODER_VP9_DECODER_H_

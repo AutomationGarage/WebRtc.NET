@@ -15,6 +15,8 @@
 #include <vector>
 
 #include "api/video/video_frame.h"
+// For EncodedImage
+#include "common_video/include/video_frame.h"
 #include "modules/include/module_common_types.h"
 
 namespace webrtc {

@@ -158,8 +158,6 @@ class SendSideCongestionController
  private:
   void MaybeCreateControllers() RTC_RUN_ON(task_queue_);
   void MaybeRecreateControllers() RTC_RUN_ON(task_queue_);
-  void UpdateInitialConstraints(TargetRateConstraints new_contraints)
-      RTC_RUN_ON(task_queue_);
 
   void StartProcessPeriodicTasks() RTC_RUN_ON(task_queue_);
   void UpdateControllerWithTimeInterval() RTC_RUN_ON(task_queue_);

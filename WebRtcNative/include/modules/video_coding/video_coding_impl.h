@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "common_video/include/frame_callback.h"
 #include "modules/video_coding/decoder_database.h"
 #include "modules/video_coding/encoder_database.h"
 #include "modules/video_coding/frame_buffer.h"
@@ -24,6 +25,7 @@
 #include "modules/video_coding/generic_encoder.h"
 #include "modules/video_coding/jitter_buffer.h"
 #include "modules/video_coding/media_optimization.h"
+#include "modules/video_coding/qp_parser.h"
 #include "modules/video_coding/receiver.h"
 #include "modules/video_coding/timing.h"
 #include "rtc_base/onetimeevent.h"
@@ -128,6 +130,7 @@ class VideoReceiver : public Module {
  public:
   VideoReceiver(Clock* clock,
                 EventFactory* event_factory,
+                EncodedImageCallback* pre_decode_image_callback,
                 VCMTiming* timing,
                 NackSender* nack_sender = nullptr,
                 KeyFrameRequestSender* keyframe_request_sender = nullptr);
@@ -222,10 +225,12 @@ class VideoReceiver : public Module {
   // Once the decoder thread has been started, usage of |_codecDataBase| moves
   // over to the decoder thread.
   VCMDecoderDataBase _codecDataBase;
+  EncodedImageCallback* const pre_decode_image_callback_;
 
   VCMProcessTimer _receiveStatsTimer RTC_GUARDED_BY(module_thread_checker_);
   VCMProcessTimer _retransmissionTimer RTC_GUARDED_BY(module_thread_checker_);
   VCMProcessTimer _keyRequestTimer RTC_GUARDED_BY(module_thread_checker_);
+  QpParser qp_parser_ RTC_GUARDED_BY(decoder_thread_checker_);
   ThreadUnsafeOneTimeEvent first_frame_received_
       RTC_GUARDED_BY(decoder_thread_checker_);
   // Modified on the construction thread. Can be read without a lock and assumed

@@ -23,9 +23,6 @@ class AdaptiveModeLevelEstimator {
   void UpdateEstimation(const VadWithLevel::LevelAndProbability& vad_data);
   float LatestLevelEstimate() const;
   void Reset();
-  bool LevelEstimationIsConfident() const {
-    return buffer_size_ms_ >= kFullBufferSizeMs;
-  }
 
  private:
   void DebugDumpEstimate();

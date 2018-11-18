@@ -31,7 +31,7 @@ class ApmDataDumper;
 
 class EchoAudibility {
  public:
-  explicit EchoAudibility(bool use_render_stationarity_at_init);
+  EchoAudibility();
   ~EchoAudibility();
 
   // Feed new render data to the echo audibility estimator.
@@ -39,12 +39,11 @@ class EchoAudibility {
               int delay_blocks,
               bool external_delay_seen,
               float reverb_decay);
+
   // Get the residual echo scaling.
-  void GetResidualEchoScaling(bool filter_has_had_time_to_converge,
-                              rtc::ArrayView<float> residual_scaling) const {
+  void GetResidualEchoScaling(rtc::ArrayView<float> residual_scaling) const {
     for (size_t band = 0; band < residual_scaling.size(); ++band) {
-      if (render_stationarity_.IsBandStationary(band) &&
-          filter_has_had_time_to_converge) {
+      if (render_stationarity_.IsBandStationary(band)) {
         residual_scaling[band] = 0.f;
       } else {
         residual_scaling[band] = 1.0f;
@@ -79,7 +78,6 @@ class EchoAudibility {
   absl::optional<int> render_spectrum_write_prev_;
   int render_block_write_prev_;
   bool non_zero_render_seen_;
-  const bool use_render_stationarity_at_init_;
   StationarityEstimator render_stationarity_;
   RTC_DISALLOW_COPY_AND_ASSIGN(EchoAudibility);
 };

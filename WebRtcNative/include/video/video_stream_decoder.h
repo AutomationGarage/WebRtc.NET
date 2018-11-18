@@ -47,7 +47,7 @@ class VideoStreamDecoder : public VCMReceiveCallback,
       bool enable_fec,
       ReceiveStatisticsProxy* receive_statistics_proxy,
       rtc::VideoSinkInterface<VideoFrame>* incoming_video_stream);
-  ~VideoStreamDecoder() override;
+  ~VideoStreamDecoder();
 
   // Implements VCMReceiveCallback.
   int32_t FrameToRender(VideoFrame& video_frame,

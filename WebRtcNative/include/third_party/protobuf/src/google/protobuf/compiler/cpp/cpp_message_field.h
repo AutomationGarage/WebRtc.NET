@@ -38,7 +38,6 @@
 #include <map>
 #include <string>
 #include <google/protobuf/compiler/cpp/cpp_field.h>
-#include <google/protobuf/compiler/cpp/cpp_helpers.h>
 
 namespace google {
 namespace protobuf {
@@ -48,13 +47,16 @@ namespace cpp {
 class MessageFieldGenerator : public FieldGenerator {
  public:
   MessageFieldGenerator(const FieldDescriptor* descriptor,
-                        const Options& options, SCCAnalyzer* scc_analyzer);
+                        const Options& options);
   ~MessageFieldGenerator();
 
   // implements FieldGenerator ---------------------------------------
   void GeneratePrivateMembers(io::Printer* printer) const;
+  void GenerateDependentAccessorDeclarations(io::Printer* printer) const;
   void GenerateAccessorDeclarations(io::Printer* printer) const;
-  void GenerateInlineAccessorDefinitions(io::Printer* printer) const;
+  void GenerateDependentInlineAccessorDefinitions(io::Printer* printer) const;
+  void GenerateInlineAccessorDefinitions(io::Printer* printer,
+                                         bool is_inline) const;
   void GenerateNonInlineAccessorDefinitions(io::Printer* printer) const;
   void GenerateClearingCode(io::Printer* printer) const;
   void GenerateMessageClearingCode(io::Printer* printer) const;
@@ -69,8 +71,13 @@ class MessageFieldGenerator : public FieldGenerator {
   void GenerateByteSize(io::Printer* printer) const;
 
  protected:
+  void GenerateArenaManipulationCode(const std::map<string, string>& variables,
+                                     io::Printer* printer) const;
+
+  virtual void GenerateGetterDeclaration(io::Printer* printer) const;
+
   const FieldDescriptor* descriptor_;
-  const bool implicit_weak_field_;
+  const bool dependent_field_;
   std::map<string, string> variables_;
 
  private:
@@ -80,12 +87,15 @@ class MessageFieldGenerator : public FieldGenerator {
 class MessageOneofFieldGenerator : public MessageFieldGenerator {
  public:
   MessageOneofFieldGenerator(const FieldDescriptor* descriptor,
-                             const Options& options, SCCAnalyzer* scc_analyzer);
+                             const Options& options);
   ~MessageOneofFieldGenerator();
 
   // implements FieldGenerator ---------------------------------------
-  void GenerateInlineAccessorDefinitions(io::Printer* printer) const;
-  void GenerateNonInlineAccessorDefinitions(io::Printer* printer) const;
+  void GenerateDependentAccessorDeclarations(io::Printer* printer) const;
+  void GenerateDependentInlineAccessorDefinitions(io::Printer* printer) const;
+  void GenerateInlineAccessorDefinitions(io::Printer* printer,
+                                         bool is_inline) const;
+  void GenerateNonInlineAccessorDefinitions(io::Printer* printer) const { }
   void GenerateClearingCode(io::Printer* printer) const;
 
   // MessageFieldGenerator, from which we inherit, overrides this so we need to
@@ -95,21 +105,30 @@ class MessageOneofFieldGenerator : public MessageFieldGenerator {
   void GenerateDestructorCode(io::Printer* printer) const;
   void GenerateConstructorCode(io::Printer* printer) const;
 
+ protected:
+  void GenerateGetterDeclaration(io::Printer* printer) const;
+
  private:
+  void InternalGenerateInlineAccessorDefinitions(
+      const std::map<string, string>& variables, io::Printer* printer) const;
+
+  const bool dependent_base_;
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(MessageOneofFieldGenerator);
 };
 
 class RepeatedMessageFieldGenerator : public FieldGenerator {
  public:
   RepeatedMessageFieldGenerator(const FieldDescriptor* descriptor,
-                                const Options& options,
-                                SCCAnalyzer* scc_analyzer);
+                                const Options& options);
   ~RepeatedMessageFieldGenerator();
 
   // implements FieldGenerator ---------------------------------------
   void GeneratePrivateMembers(io::Printer* printer) const;
+  void GenerateDependentAccessorDeclarations(io::Printer* printer) const;
   void GenerateAccessorDeclarations(io::Printer* printer) const;
-  void GenerateInlineAccessorDefinitions(io::Printer* printer) const;
+  void GenerateDependentInlineAccessorDefinitions(io::Printer* printer) const;
+  void GenerateInlineAccessorDefinitions(io::Printer* printer,
+                                         bool is_inline) const;
   void GenerateClearingCode(io::Printer* printer) const;
   void GenerateMergingCode(io::Printer* printer) const;
   void GenerateSwappingCode(io::Printer* printer) const;
@@ -121,8 +140,12 @@ class RepeatedMessageFieldGenerator : public FieldGenerator {
   void GenerateByteSize(io::Printer* printer) const;
 
  private:
+  void InternalGenerateTypeDependentAccessorDeclarations(
+      io::Printer* printer) const;
+
   const FieldDescriptor* descriptor_;
-  const bool implicit_weak_field_;
+  const bool dependent_field_;
+  const bool dependent_getter_;
   std::map<string, string> variables_;
 
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(RepeatedMessageFieldGenerator);

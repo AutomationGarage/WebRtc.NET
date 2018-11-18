@@ -36,11 +36,8 @@ constexpr int64_t kMinusInfinityVal = std::numeric_limits<int64_t>::min();
 class Timestamp {
  public:
   Timestamp() = delete;
-  static constexpr Timestamp PlusInfinity() {
+  static constexpr Timestamp Infinity() {
     return Timestamp(timestamp_impl::kPlusInfinityVal);
-  }
-  static constexpr Timestamp MinusInfinity() {
-    return Timestamp(timestamp_impl::kMinusInfinityVal);
   }
   template <int64_t seconds>
   static constexpr Timestamp Seconds() {
@@ -106,9 +103,7 @@ class Timestamp {
                 nullptr>
   static Timestamp us(T microseconds) {
     if (microseconds == std::numeric_limits<double>::infinity()) {
-      return PlusInfinity();
-    } else if (microseconds == -std::numeric_limits<double>::infinity()) {
-      return MinusInfinity();
+      return Infinity();
     } else {
       RTC_DCHECK(!std::isnan(microseconds));
       RTC_DCHECK_GE(microseconds, 0);
@@ -146,10 +141,7 @@ class Timestamp {
   template <typename T>
   constexpr typename std::enable_if<std::is_floating_point<T>::value, T>::type
   us() const {
-    return IsPlusInfinity()
-               ? std::numeric_limits<T>::infinity()
-               : IsMinusInfinity() ? -std::numeric_limits<T>::infinity()
-                                   : microseconds_;
+    return IsInfinite() ? std::numeric_limits<T>::infinity() : microseconds_;
   }
 
   constexpr int64_t seconds_or(int64_t fallback_value) const {
@@ -162,59 +154,25 @@ class Timestamp {
     return IsFinite() ? microseconds_ : fallback_value;
   }
 
-  constexpr bool IsFinite() const { return !IsInfinite(); }
   constexpr bool IsInfinite() const {
-    return microseconds_ == timedelta_impl::kPlusInfinityVal ||
-           microseconds_ == timedelta_impl::kMinusInfinityVal;
+    return microseconds_ == timestamp_impl::kPlusInfinityVal;
   }
-  constexpr bool IsPlusInfinity() const {
-    return microseconds_ == timedelta_impl::kPlusInfinityVal;
-  }
-  constexpr bool IsMinusInfinity() const {
-    return microseconds_ == timedelta_impl::kMinusInfinityVal;
-  }
-  Timestamp operator+(const TimeDelta& other) const {
-    if (IsPlusInfinity() || other.IsPlusInfinity()) {
-      RTC_DCHECK(!IsMinusInfinity());
-      RTC_DCHECK(!other.IsMinusInfinity());
-      return PlusInfinity();
-    } else if (IsMinusInfinity() || other.IsMinusInfinity()) {
-      RTC_DCHECK(!IsPlusInfinity());
-      RTC_DCHECK(!other.IsPlusInfinity());
-      return MinusInfinity();
-    }
-    return Timestamp::us(us() + other.us());
-  }
-  Timestamp operator-(const TimeDelta& other) const {
-    if (IsPlusInfinity() || other.IsMinusInfinity()) {
-      RTC_DCHECK(!IsMinusInfinity());
-      RTC_DCHECK(!other.IsPlusInfinity());
-      return PlusInfinity();
-    } else if (IsMinusInfinity() || other.IsPlusInfinity()) {
-      RTC_DCHECK(!IsPlusInfinity());
-      RTC_DCHECK(!other.IsMinusInfinity());
-      return MinusInfinity();
-    }
-    return Timestamp::us(us() - other.us());
-  }
+  constexpr bool IsFinite() const { return !IsInfinite(); }
   TimeDelta operator-(const Timestamp& other) const {
-    if (IsPlusInfinity() || other.IsMinusInfinity()) {
-      RTC_DCHECK(!IsMinusInfinity());
-      RTC_DCHECK(!other.IsPlusInfinity());
-      return TimeDelta::PlusInfinity();
-    } else if (IsMinusInfinity() || other.IsPlusInfinity()) {
-      RTC_DCHECK(!IsPlusInfinity());
-      RTC_DCHECK(!other.IsMinusInfinity());
-      return TimeDelta::MinusInfinity();
-    }
     return TimeDelta::us(us() - other.us());
   }
+  Timestamp operator-(const TimeDelta& delta) const {
+    return Timestamp::us(us() - delta.us());
+  }
+  Timestamp operator+(const TimeDelta& delta) const {
+    return Timestamp::us(us() + delta.us());
+  }
   Timestamp& operator-=(const TimeDelta& other) {
-    *this = *this - other;
+    microseconds_ -= other.us();
     return *this;
   }
   Timestamp& operator+=(const TimeDelta& other) {
-    *this = *this + other;
+    microseconds_ += other.us();
     return *this;
   }
   constexpr bool operator==(const Timestamp& other) const {

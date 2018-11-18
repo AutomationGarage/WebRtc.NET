@@ -13,6 +13,7 @@
 
 #include <memory>
 
+#include "modules/audio_coding/test/ACMTest.h"
 #include "modules/audio_coding/test/Channel.h"
 #include "modules/audio_coding/test/PCMFile.h"
 
@@ -46,12 +47,12 @@ class TestPack : public AudioPacketizationCallback {
   size_t payload_size_;
 };
 
-class TestAllCodecs {
+class TestAllCodecs : public ACMTest {
  public:
   explicit TestAllCodecs(int test_mode);
   ~TestAllCodecs();
 
-  void Perform();
+  void Perform() override;
 
  private:
   // The default value of '-1' indicates that the registration is based only on

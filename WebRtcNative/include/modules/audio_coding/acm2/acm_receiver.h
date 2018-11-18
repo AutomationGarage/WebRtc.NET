@@ -224,7 +224,6 @@ class AcmReceiver {
   //
   int DecoderByPayloadType(uint8_t payload_type,
                            CodecInst* codec) const;
-  absl::optional<SdpAudioFormat> DecoderByPayloadType(int payload_type) const;
 
   //
   // Enable NACK and set the maximum size of the NACK list. If NACK is already

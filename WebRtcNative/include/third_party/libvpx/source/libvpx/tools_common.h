@@ -7,8 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef VPX_TOOLS_COMMON_H_
-#define VPX_TOOLS_COMMON_H_
+#ifndef TOOLS_COMMON_H_
+#define TOOLS_COMMON_H_
 
 #include <stdio.h>
 
@@ -163,4 +163,4 @@ void vpx_img_truncate_16_to_8(vpx_image_t *dst, vpx_image_t *src);
 } /* extern "C" */
 #endif
 
-#endif  // VPX_TOOLS_COMMON_H_
+#endif  // TOOLS_COMMON_H_

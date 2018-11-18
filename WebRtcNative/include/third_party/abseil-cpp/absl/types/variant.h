@@ -414,9 +414,9 @@ constexpr absl::add_pointer_t<const T> get_if(
 //   };
 //
 //   // Declare our variant, and call `absl::visit()` on it.
-//   absl::variant<int, std::string> foo = std::string("foo");
+//   std::variant<int, std::string> foo = std::string("foo");
 //   GetVariant visitor;
-//   absl::visit(visitor, foo);  // Prints `The variant's value is: foo'
+//   std::visit(visitor, foo);  // Prints `The variant's value is: foo'
 template <typename Visitor, typename... Variants>
 variant_internal::VisitResult<Visitor, Variants...> visit(Visitor&& vis,
                                                           Variants&&... vars) {

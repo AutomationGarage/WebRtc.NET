@@ -33,7 +33,6 @@
 
 #include <google/protobuf/map.h>
 #include <google/protobuf/map_entry_lite.h>
-#include <google/protobuf/wire_format_lite.h>
 
 namespace google {
 namespace protobuf {
@@ -50,9 +49,6 @@ class MapFieldLite {
   typedef Derived EntryType;
 
  public:
-  typedef Map<Key, T> MapType;
-  typedef EntryType EntryTypeTrait;
-
   MapFieldLite() : arena_(NULL) { SetDefaultEnumValue(); }
 
   explicit MapFieldLite(Arena* arena) : arena_(arena), map_(arena) {
@@ -108,6 +104,7 @@ class MapFieldLite {
   friend class ::google::protobuf::Arena;
 };
 
+
 // True if IsInitialized() is true for value field in all elements of t. T is
 // expected to be message.  It's useful to have this helper here to keep the
 // protobuf compiler from ever having to emit loops in IsInitialized() methods.
@@ -120,21 +117,6 @@ bool AllAreInitialized(const Map<Key, T>& t) {
   }
   return true;
 }
-
-template <typename MEntry>
-struct MapEntryToMapField : MapEntryToMapField<typename MEntry::SuperType> {};
-
-template <typename T, typename Key, typename Value,
-          WireFormatLite::FieldType kKeyFieldType,
-          WireFormatLite::FieldType kValueFieldType, int default_enum_value>
-struct MapEntryToMapField<MapEntryLite<T, Key, Value, kKeyFieldType,
-                                       kValueFieldType, default_enum_value> > {
-  typedef MapFieldLite<MapEntryLite<T, Key, Value, kKeyFieldType,
-                                    kValueFieldType, default_enum_value>,
-                       Key, Value, kKeyFieldType, kValueFieldType,
-                       default_enum_value>
-      MapFieldType;
-};
 
 }  // namespace internal
 }  // namespace protobuf
