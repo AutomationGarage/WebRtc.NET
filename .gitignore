@@ -2,9 +2,6 @@ bin
 obj
 *.user
 .vs
-/WebRtcNative/include/webrtc/examples
-/WebRtcNative/Debug
-/WebRtcNative/Debug_x64
 /WebRtc.NET.sdf
 /WebRtc.NET.VC.opendb
 /WebRtc.NET.VC.db
@@ -17,3 +14,5 @@ obj
 /WebRtcNative/Debug_x64
 /WebRtcNative/lib
 /WebRtcNative/lib_x64
+/WebRtcNative/libd
+/WebRtcNative/libd_x64
